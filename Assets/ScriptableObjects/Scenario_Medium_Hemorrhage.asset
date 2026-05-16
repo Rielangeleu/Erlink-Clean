@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b275561210a46124da617cff693c9b2d, type: 3}
+  m_Name: Scenario_Medium_Hemorrhage
+  m_EditorClassIdentifier: Assembly-CSharp::ScenarioData
+  scenarioID: SCN_002A
+  scenarioTitle: Uncontrolled Hemorrhage
+  scenarioDescription: 
+  difficulty: 1
+  emergencyCode: 0
+  timeLimitSeconds: 300
+  patientAge: ~35s
+  patientGender: Male
+  patientPresentation: Patient lying on floor with    actively bleeding thigh wound,
+    awake but confused
+  vitalSigns:
+  - RR >30/min
+  - Weak/Rapid Pulse
+  - Confused/Altered
+  difficultyLabel: MEDIUM
+  patientPrefab: {fileID: 3659184902820579405, guid: 4cacd83e88f5f5b4b851724e343fe827, type: 3}
+  patientImage: {fileID: 0}
+  rpmAssessment:
+    respirationQuestion: What is the patient's breathing rate?
+    respirationOptions:
+    - Normal breathing (10-29/min)
+    - Rapid breathing (>30/min)
+    - Agonal/absent breathing (<10/min)
+    correctRespirationIndex: 1
+    respirationFeedback: Rapid breathing detected (>30/min). Respiratory distress
+      noted.
+    perfusionQuestion: What is the patient's perfusion status?
+    perfusionOptions:
+    - Normal pulse, no active bleeding
+    - Weak rapid pulse with uncontrolled hemorrhage
+    - No pulse detected
+    correctPerfusionIndex: 1
+    perfusionFeedback: Uncontrolled hemorrhage identified! Per START rules, active
+      bleeding automatically upgrades to Immediate/Red.
+    mentalStatusQuestion: What is the patient's mental status?
+    mentalStatusOptions:
+    - Alert and Oriented
+    - Confused / Altered Mental Status
+    - Unconscious
+    correctMentalStatusIndex: 1
+    mentalStatusFeedback: "Patient is confused \u2014 altered mental status noted.
+      Consistent with blood loss."
+  correctTriageCategory: 0
+  ehrActions:
+  - actionName: Apply tourniquet / direct pressure to wound
+    actionDescription: "Correct \u2014 control bleeding first before tagging. Hemorrhage
+      control is the priority intervention."
+    isCorrectAction: 1
+  - actionName: Initiate CPR (30:2)
+    actionDescription: "Incorrect \u2014 patient has a pulse. CPR is not indicated
+      here."
+    isCorrectAction: 0
+  - actionName: 'Elevate legs and give oral fluids '
+    actionDescription: "Incorrect \u2014 do not give oral fluids to a confused patient.
+      Control bleeding first."
+    isCorrectAction: 0
+  maxAccuracyPoints: 5
+  correctFeedback: Correct! Despite initial ambulatory status, uncontrolled hemorrhage
+    upgrades this patient to Immediate/Red per START rules.
+  incorrectFeedback: "Incorrect. The critical finding is the uncontrolled hemorrhage
+    \u2014 this automatically upgrades to Immediate/Red regardless of other vitals."
+  clinicalExplanation: Per START protocol, uncontrolled hemorrhage is an immediate
+    life threat. Even if the patient was initially ambulatory (Green flag), active
+    uncontrolled bleeding overrides this and requires Immediate/Red classification.
+    Tourniquet application must precede triage tagging.
+  isMultiPatient: 1
+  additionalPatients:
+  - {fileID: 11400000, guid: 587f018d90dfab342b32d52b38aafbae, type: 2}
+  correctPriorityOrder: 1

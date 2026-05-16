@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b275561210a46124da617cff693c9b2d, type: 3}
+  m_Name: Scenario_Medium_Fracture
+  m_EditorClassIdentifier: Assembly-CSharp::ScenarioData
+  scenarioID: SCN_002B
+  scenarioTitle: Closed Fracture with Shock
+  scenarioDescription: 
+  difficulty: 1
+  emergencyCode: 4
+  timeLimitSeconds: 300
+  patientAge: ~28s
+  patientGender: Female
+  patientPresentation: Patient sitting against wall, alert, severe leg pain, delayed
+    capillary refill
+  vitalSigns:
+  - RR Normal
+  - CRT >2 seconds
+  - Alert & Oriented
+  difficultyLabel: MEDIUM
+  patientPrefab: {fileID: 8246157524912221465, guid: b39fc1d9428c7da4ca7170398c1e65ba, type: 3}
+  patientImage: {fileID: 0}
+  rpmAssessment:
+    respirationQuestion: What is the patient's breathing rate?
+    respirationOptions:
+    - Normal breathing (10-29/min)
+    - Rapid breathing (>30/min)
+    - Agonal/absent (<10/min)
+    correctRespirationIndex: 0
+    respirationFeedback: "Normal respiratory rate \u2014 no respiratory compromise
+      detected."
+    perfusionQuestion: What is the capillary refill time (CRT)?
+    perfusionOptions:
+    - CRT less than 2 seconds (normal)
+    - CRT greater than 2 seconds (delayed)
+    - No pulse detected
+    correctPerfusionIndex: 1
+    perfusionFeedback: "Delayed capillary refill (>2 seconds) \u2014 peripheral perfusion
+      is compromised but pulse is present."
+    mentalStatusQuestion: What is the patient's mental status?
+    mentalStatusOptions:
+    - Alert and Oriented
+    - Confused / Altered
+    - Unconscious
+    correctMentalStatusIndex: 0
+    mentalStatusFeedback: "Patient is alert and oriented \u2014 no neurological compromise
+      detected."
+  correctTriageCategory: 1
+  ehrActions:
+  - actionName: Immobilize fracture and monitor vitals
+    actionDescription: "Correct \u2014 stable fracture requires immobilization. Patient
+      is Delayed/Yellow and can wait for available resources."
+    isCorrectAction: 1
+  - actionName: Initiate CPR immediately
+    actionDescription: "Incorrect \u2014 patient has pulse and is conscious. CPR
+      is not indicated."
+    isCorrectAction: 0
+  - actionName: Apply tourniquet above fracture site
+    actionDescription: "Incorrect \u2014 closed fracture has no active external bleeding
+      requiring tourniquet."
+    isCorrectAction: 0
+  maxAccuracyPoints: 5
+  correctFeedback: 'Correct! Normal respiration, present perfusion, and alert mental
+    status = Delayed/Yellow. Remember: Patient A (hemorrhage) must be treated first.'
+  incorrectFeedback: Incorrect. This patient has adequate vitals and is classified
+    as Delayed/Yellow per START. Also note that Patient A must be prioritized first.
+  clinicalExplanation: "Per START protocol: normal respiration + present perfusion
+    (even with delayed CRT) + alert mental status = Delayed/Yellow. The key learning
+    is prioritization \u2014 the Immediate/Red patient (Patient A) must always be
+    treated before Delayed/Yellow patients even if you assessed Patient B first."
+  isMultiPatient: 1
+  additionalPatients: []
+  correctPriorityOrder: 2

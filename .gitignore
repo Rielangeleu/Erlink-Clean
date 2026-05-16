@@ -104,3 +104,9 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+
+# Ignore heavy native Firebase binaries that break GitHub limits
+*.bundle
+*.so
+*.dll
