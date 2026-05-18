@@ -5,9 +5,16 @@ using TMPro;
 using DG.Tweening;
 using System.Threading.Tasks;
 
+public enum UserRole
+{
+    Student,
+    Instructor,
+    Admin
+}
+
 /// <summary>
 /// Controls the Login Scene.
-/// Handles Firebase authentication and role-based routing.
+/// Handles Firebase authentication, responsive layout scaling, and 3-way role routing.
 /// </summary>
 public class LoginSceneController : MonoBehaviour
 {
@@ -15,13 +22,20 @@ public class LoginSceneController : MonoBehaviour
     public TMP_InputField emailField;
     public TMP_InputField passwordField;
 
-    [Header("Role Toggle")]
+    [Header("3-Way Role Toggles")]
     public Button studentToggle;
     public Button instructorToggle;
+    public Button adminToggle; // Drag your brand new Admin option button here in the Inspector!
+
+    [Space(5)]
     public Image studentToggleBg;
     public Image instructorToggleBg;
+    public Image adminToggleBg; // Drag your Admin button's background Image component here!
+
+    [Space(5)]
     public TextMeshProUGUI studentToggleText;
     public TextMeshProUGUI instructorToggleText;
+    public TextMeshProUGUI adminToggleText; // Drag your Admin button's Text component here!
 
     [Header("Buttons")]
     public Button loginButton;
@@ -32,15 +46,12 @@ public class LoginSceneController : MonoBehaviour
     public GameObject loadingOverlay;
 
     [Header("Colors")]
-    public Color activeToggleColor =
-        new Color(0.145f, 0.337f, 0.922f);
-    public Color inactiveToggleColor =
-        new Color(0.953f, 0.953f, 0.961f);
+    public Color activeToggleColor = new Color(0.145f, 0.337f, 0.922f); // #2563EB Active Vibrant Blue
+    public Color inactiveToggleColor = new Color(0.953f, 0.953f, 0.961f); // #F1F1F3 Clean Off-White Muted Grey
     public Color activeTextColor = Color.white;
-    public Color inactiveTextColor =
-        new Color(0.216f, 0.255f, 0.318f);
+    public Color inactiveTextColor = new Color(0.216f, 0.255f, 0.318f); // Dark slate charcoal gray look
 
-    private string _selectedRole = "student";
+    private UserRole _selectedRole = UserRole.Student;
     private bool _isLoading = false;
 
     void Start()
@@ -48,17 +59,22 @@ public class LoginSceneController : MonoBehaviour
         // Animate entrance
         AnimateEntrance();
 
-        // Wire toggle buttons
-        studentToggle.onClick.AddListener(
-            () => SelectRole("student"));
-        instructorToggle.onClick.AddListener(
-            () => SelectRole("instructor"));
+        // Wire 3-way selection buttons with explicit lambda listeners
+        if (studentToggle != null)
+            studentToggle.onClick.AddListener(() => SelectRole(UserRole.Student));
+
+        if (instructorToggle != null)
+            instructorToggle.onClick.AddListener(() => SelectRole(UserRole.Instructor));
+
+        if (adminToggle != null)
+            adminToggle.onClick.AddListener(() => SelectRole(UserRole.Admin));
 
         // Wire login button
-        loginButton.onClick.AddListener(OnLoginClicked);
+        if (loginButton != null)
+            loginButton.onClick.AddListener(OnLoginClicked);
 
-        // Set default role
-        SelectRole("student");
+        // Set default role state on initialization frame zero
+        SelectRole(UserRole.Student);
 
         // Listen for Firebase events
         FirebaseManager.OnLoginSuccess += OnLoginSuccess;
@@ -69,8 +85,7 @@ public class LoginSceneController : MonoBehaviour
         if (loadingOverlay != null) loadingOverlay.SetActive(false);
 
         // Check if already logged in
-        if (FirebaseManager.CurrentUser != null &&
-            FirebaseManager.CurrentProfile != null)
+        if (FirebaseManager.CurrentUser != null && FirebaseManager.CurrentProfile != null)
         {
             RouteToScene(FirebaseManager.CurrentProfile.role);
         }
@@ -78,38 +93,41 @@ public class LoginSceneController : MonoBehaviour
 
     void AnimateEntrance()
     {
-        // Fade in from white
-        CanvasGroup cg = GetComponent<CanvasGroup>()
-            ?? gameObject.AddComponent<CanvasGroup>();
+        // Fade in cleanly via Canvas Group alpha interpolation matrix checks
+        CanvasGroup cg = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
         cg.alpha = 0f;
         cg.DOFade(1f, 0.5f).SetEase(Ease.OutCubic);
     }
 
-    void SelectRole(string role)
+    public void SelectRole(UserRole role)
     {
         _selectedRole = role;
 
-        bool isStudent = role == "student";
+        // 1. Process Structural Visual Component Refreshes Across All Three Buttons
+        UpdateToggleVisuals(studentToggleBg, studentToggleText, _selectedRole == UserRole.Student);
+        UpdateToggleVisuals(instructorToggleBg, instructorToggleText, _selectedRole == UserRole.Instructor);
+        UpdateToggleVisuals(adminToggleBg, adminToggleText, _selectedRole == UserRole.Admin);
 
-        // Update Student toggle
-        studentToggleBg.color = isStudent
-            ? activeToggleColor : inactiveToggleColor;
-        studentToggleText.color = isStudent
-            ? activeTextColor : inactiveTextColor;
+        // 2. Punch Scale Feedback for the user click target
+        Button activeTargetButton = _selectedRole switch
+        {
+            UserRole.Student => studentToggle,
+            UserRole.Instructor => instructorToggle,
+            UserRole.Admin => adminToggle,
+            _ => studentToggle
+        };
 
-        // Update Instructor toggle
-        instructorToggleBg.color = !isStudent
-            ? activeToggleColor : inactiveToggleColor;
-        instructorToggleText.color = !isStudent
-            ? activeTextColor : inactiveTextColor;
+        if (activeTargetButton != null)
+        {
+            activeTargetButton.GetComponent<RectTransform>()
+                .DOPunchScale(new Vector3(0.03f, 0.03f, 0), 0.2f, 3, 0.5f);
+        }
+    }
 
-        // Punch scale for feedback
-        Button active = isStudent
-            ? studentToggle : instructorToggle;
-        active.GetComponent<RectTransform>()
-            .DOPunchScale(
-                new Vector3(0.03f, 0.03f, 0),
-                0.2f, 3, 0.5f);
+    void UpdateToggleVisuals(Image bgImage, TextMeshProUGUI textMesh, bool isActive)
+    {
+        if (bgImage != null) bgImage.color = isActive ? activeToggleColor : inactiveToggleColor;
+        if (textMesh != null) textMesh.color = isActive ? activeTextColor : inactiveTextColor;
     }
 
     async void OnLoginClicked()
@@ -146,19 +164,16 @@ public class LoginSceneController : MonoBehaviour
         HideError();
 
         // Attempt Firebase login
-        bool success = await FirebaseManager.Instance
-            .LoginAsync(email, password);
+        bool success = await FirebaseManager.Instance.LoginAsync(email, password);
 
         if (!success)
             SetLoading(false);
-        // Success is handled by OnLoginSuccess event
     }
 
     void OnLoginSuccess(UserProfile profile)
     {
         SetLoading(false);
-        Debug.Log($"Welcome {profile.displayName} " +
-                  $"({profile.role})");
+        Debug.Log($"Welcome {profile.displayName} ({profile.role})");
         RouteToScene(profile.role);
     }
 
@@ -168,13 +183,17 @@ public class LoginSceneController : MonoBehaviour
         ShowError(error);
 
         // Shake login button
-        loginButton.GetComponent<RectTransform>()
-            .DOShakePosition(0.4f, 8f, 20);
+        if (loginButton != null)
+        {
+            loginButton.GetComponent<RectTransform>()
+                .DOShakePosition(0.4f, 8f, 20);
+        }
     }
 
     void RouteToScene(string role)
     {
-        switch (role)
+        // Enforces string conversions back down safely from your database profiles string keys
+        switch (role.ToLower().Trim())
         {
             case "student":
                 SceneManager.LoadScene("DashboardScene");
@@ -183,6 +202,7 @@ public class LoginSceneController : MonoBehaviour
                 SceneManager.LoadScene("InstructorMobileScene");
                 break;
             case "it_admin":
+            case "admin":
                 SceneManager.LoadScene("AdminMobileScene");
                 break;
             default:
@@ -207,11 +227,13 @@ public class LoginSceneController : MonoBehaviour
         if (errorText != null)
             errorText.text = message;
 
-        // Animate in
         errorMessage.GetComponent<RectTransform>()
-            .DOPunchScale(
-                new Vector3(0.02f, 0.02f, 0),
-                0.3f, 3, 0.5f);
+            .DOPunchScale(new Vector3(0.02f, 0.02f, 0), 0.3f, 3, 0.5f);
+    }
+
+    void ShowErrorTextDirectly(string text)
+    {
+        ShowError(text);
     }
 
     void HideError()
@@ -222,8 +244,11 @@ public class LoginSceneController : MonoBehaviour
 
     void ShakeField(TMP_InputField field)
     {
-        field.GetComponent<RectTransform>()
-            .DOShakePosition(0.3f, 6f, 15);
+        if (field != null)
+        {
+            field.GetComponent<RectTransform>()
+                .DOShakePosition(0.3f, 6f, 15);
+        }
     }
 
     void OnDestroy()
