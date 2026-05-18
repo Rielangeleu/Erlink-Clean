@@ -6,7 +6,7 @@ using DG.Tweening;
 
 /// <summary>
 /// Feedback Scene — ALL values driven by actual performance.
-/// Score color, title, subtitle all change based on result.
+/// Handles stable entrance animations and explicit gray fallback styles for empty states.
 /// </summary>
 public class FeedbackSceneController : MonoBehaviour
 {
@@ -27,7 +27,8 @@ public class FeedbackSceneController : MonoBehaviour
     public TextMeshProUGUI speedLabel;
     public Image speedIconBg;
 
-    [Header("Triage Comparison")]
+    [Header("Triage Comparison Panel")]
+    public GameObject triageAssessmentContainer;
     public Image yourSelectionPill;
     public TextMeshProUGUI yourSelectionPillText;
     public Image correctTriagePill;
@@ -40,11 +41,24 @@ public class FeedbackSceneController : MonoBehaviour
     public Button nextScenarioButton;
     public Button dashboardButton;
 
+    // Fixed Animation Reference Tracking Variables
+    private Vector2 _originalTitlePosition;
+    private bool _hasCapturedTitlePosition = false;
+
     void Start()
     {
+        // Cache our exact initial anchored text coordinates before any animation math modifies them
+        if (performanceTitle != null)
+        {
+            RectTransform rt = performanceTitle.GetComponent<RectTransform>();
+            _originalTitlePosition = rt.anchoredPosition;
+            _hasCapturedTitlePosition = true;
+        }
+
         ScoringResult result = ScoringSystem.LastResult;
 
-        if (result == null)
+        // FIXED: Check for fallback placeholders if result properties are missing or empty
+        if (result == null || result.timeTaken == 0)
         {
             ShowPlaceholder();
             WireButtons();
@@ -52,7 +66,7 @@ public class FeedbackSceneController : MonoBehaviour
         }
 
         PopulateResults(result);
-        AnimateEntrance();
+        AnimateEntrance(result);
         WireButtons();
         SaveResultToFirebase(result);
     }
@@ -71,35 +85,22 @@ public class FeedbackSceneController : MonoBehaviour
             scenario.difficulty.ToString());
     }
 
-
     void PopulateResults(ScoringResult result)
     {
-        // Get tier based on actual score
-        Color mainColor = GetScoreColor(result.finalScore);
         string title = GetPerformanceTitle(result.finalScore);
-        string subtitle = GetPerformanceSubtitle(
-            result.finalScore, result.isCorrect);
+        string subtitle = GetPerformanceSubtitle(result.finalScore, result.isCorrect);
 
-        // ── Score Circle ─────────────────────────────
+        // TWO-TONE RADIAL SCORE CIRCLE SYSTEM 
+        ApplyScoreCircleColors(result.finalScore);
+
         if (scoreText != null)
         {
-            scoreText.text = "0%"; // starts at 0, animates up
-            scoreText.color = mainColor;
+            scoreText.text = "0%";
         }
 
-        if (scoreCircleFill != null)
-            scoreCircleFill.color = new Color(
-                mainColor.r, mainColor.g, mainColor.b, 0.15f);
-
-        if (scoreCircleBorder != null)
-            scoreCircleBorder.color = new Color(
-                mainColor.r, mainColor.g, mainColor.b, 0.5f);
-
-        // ── Performance Text ──────────────────────────
         if (performanceTitle != null)
         {
             performanceTitle.text = title;
-            performanceTitle.color = mainColor;
         }
 
         if (performanceSubtitle != null)
@@ -109,35 +110,33 @@ public class FeedbackSceneController : MonoBehaviour
         if (accuracyValue != null)
         {
             accuracyValue.text = $"{result.accuracyScore}%";
-            accuracyValue.color = GetScoreColor(result.accuracyScore);
+            accuracyValue.color = GetBorderColor(result.accuracyScore);
         }
 
         if (accuracyLabel != null)
         {
             bool correct = result.isCorrect;
-            accuracyLabel.text = correct
-                ? "Correct triage decision ✓"
-                : "Incorrect triage decision ✗";
-            accuracyLabel.color = correct
-                ? new Color(0.086f, 0.635f, 0.290f)
-                : new Color(0.863f, 0.149f, 0.149f);
+            accuracyLabel.text = correct ? "Correct triage ✓" : "Incorrect triage ✗";
+            accuracyLabel.color = correct ? new Color(0.086f, 0.635f, 0.290f) : new Color(0.863f, 0.149f, 0.149f);
         }
 
         if (accuracyIconBg != null)
             accuracyIconBg.color = result.isCorrect
-                ? new Color(0.086f, 0.635f, 0.290f, 0.15f)
-                : new Color(0.863f, 0.149f, 0.149f, 0.15f);
+                ? new Color(0.086f, 0.635f, 0.290f, 0.12f)
+                : new Color(0.863f, 0.149f, 0.149f, 0.12f);
 
         // ── Speed Card ────────────────────────────────
         if (speedValue != null)
         {
             speedValue.text = $"{result.speedScore}%";
-            speedValue.color = GetScoreColor(result.speedScore);
+            speedValue.color = GetBorderColor(result.speedScore);
         }
+
+        bool isTimerExpired = result.timeTaken >= 180f || result.speedScore <= 0;
 
         if (speedLabel != null)
         {
-            if (result.timeTaken >= float.MaxValue)
+            if (isTimerExpired)
             {
                 speedLabel.text = "Timer expired — Delayed Care penalty";
                 speedLabel.color = new Color(0.863f, 0.149f, 0.149f);
@@ -146,78 +145,69 @@ public class FeedbackSceneController : MonoBehaviour
             {
                 int mins = Mathf.FloorToInt(result.timeTaken / 60f);
                 int secs = Mathf.FloorToInt(result.timeTaken % 60f);
-                speedLabel.text = mins > 0
-                    ? $"Response time: {mins}m {secs}s"
-                    : $"Response time: {secs} seconds";
+                speedLabel.text = mins > 0 ? $" {mins}m {secs}s" : $" {secs} seconds";
                 speedLabel.color = new Color(0.443f, 0.451f, 0.529f);
             }
         }
 
         if (speedIconBg != null)
-            speedIconBg.color = new Color(
-                0.145f, 0.337f, 0.922f, 0.15f);
+            speedIconBg.color = new Color(0.145f, 0.337f, 0.922f, 0.12f);
 
-        // ── Triage Comparison ─────────────────────────
-        if (yourSelectionPillText != null)
-            yourSelectionPillText.text =
-                GetTriageLabel(result.selectedCategory);
-
-        if (yourSelectionPill != null)
+        // ── DYNAMIC TIMEOUT CLIP ──
+        if (isTimerExpired && triageAssessmentContainer != null)
         {
-            yourSelectionPill.color =
-                GetTriagePillColor(result.selectedCategory);
+            triageAssessmentContainer.SetActive(false);
+        }
+        else
+        {
+            if (triageAssessmentContainer != null) triageAssessmentContainer.SetActive(true);
 
-            // Red outline if wrong
-            if (!result.isCorrect)
+            if (yourSelectionPillText != null)
+                yourSelectionPillText.text = GetTriageLabel(result.selectedCategory);
+
+            if (yourSelectionPill != null)
             {
-                Outline ol = yourSelectionPill
-                    .GetComponent<Outline>()
-                    ?? yourSelectionPill
-                        .gameObject.AddComponent<Outline>();
-                ol.effectColor =
-                    new Color(0.863f, 0.149f, 0.149f, 0.9f);
-                ol.effectDistance = new Vector2(3, 3);
+                yourSelectionPill.color = GetTriagePillColor(result.selectedCategory);
+
+                if (!result.isCorrect)
+                {
+                    Outline ol = yourSelectionPill.GetComponent<Outline>() ?? yourSelectionPill.gameObject.AddComponent<Outline>();
+                    ol.effectColor = new Color(0.863f, 0.149f, 0.149f, 0.9f);
+                    ol.effectDistance = new Vector2(3, 3);
+                }
             }
+
+            if (yourSelectionPillText != null)
+                yourSelectionPillText.color = GetTriagePillTextColor(result.selectedCategory);
+
+            if (correctTriagePillText != null)
+                correctTriagePillText.text = GetTriageLabel(result.correctCategory);
+
+            if (correctTriagePill != null)
+                correctTriagePill.color = GetTriagePillColor(result.correctCategory);
+
+            if (correctTriagePillText != null)
+                correctTriagePillText.color = GetTriagePillTextColor(result.correctCategory);
         }
 
-        if (yourSelectionPillText != null)
-            yourSelectionPillText.color =
-                GetTriagePillTextColor(result.selectedCategory);
-
-        if (correctTriagePillText != null)
-            correctTriagePillText.text =
-                GetTriageLabel(result.correctCategory);
-
-        if (correctTriagePill != null)
-            correctTriagePill.color =
-                GetTriagePillColor(result.correctCategory);
-
-        if (correctTriagePillText != null)
-            correctTriagePillText.color =
-                GetTriagePillTextColor(result.correctCategory);
-
-        // ── Explanation ───────────────────────────────
+        // ── Explanation Autofit Text Injection ─────────
         if (explanationText != null)
         {
-            string explanation =
-                ScoringSystem.LastScenario?.clinicalExplanation;
+            string explanation = ScoringSystem.LastScenario?.clinicalExplanation;
 
             if (string.IsNullOrEmpty(explanation))
                 explanation = result.isCorrect
-                    ? "Well done! Your triage decision aligned " +
-                      "with the START protocol criteria."
-                    : "Review the START triage algorithm. " +
-                      "Complete the RPM sequence in order " +
-                      "(Respiration → Perfusion → Mental Status) " +
-                      "before assigning a triage tag.";
+                    ? "Well done! Your triage decision aligned with the START protocol criteria."
+                    : "Review the START triage algorithm. Complete the RPM sequence in order (Respiration → Perfusion → Mental Status) before assigning a triage tag.";
 
-            if (!result.isCorrect)
+            if (isTimerExpired)
             {
-                bool underTriage = result.selectedCategory >
-                    result.correctCategory;
-                string prefix = underTriage
-                    ? "⚠ Under-triage detected. "
-                    : "⚠ Over-triage detected. ";
+                explanation = "Critical Care Delay: The allocation timeline window reached its limit before a definitive prioritization tag was assigned. Under mass-casualty parameters, speed is vital to save lives.";
+            }
+            else if (!result.isCorrect)
+            {
+                bool underTriage = result.selectedCategory > result.correctCategory;
+                string prefix = underTriage ? "⚠ Under-triage detected. " : "⚠ Over-triage detected. ";
                 explanation = prefix + explanation;
             }
 
@@ -225,54 +215,78 @@ public class FeedbackSceneController : MonoBehaviour
         }
     }
 
-    void AnimateEntrance()
+    void ApplyScoreCircleColors(int score)
     {
-        ScoringResult result = ScoringSystem.LastResult;
-        if (result == null) return;
+        Color textAndBorderColor;
+        Color solidPastelFillColor;
 
-        // Animate score counting up from 0
+        if (score >= 90)
+        {
+            textAndBorderColor = new Color(0.086f, 0.635f, 0.290f);
+            solidPastelFillColor = new Color(0.85f, 0.96f, 0.89f);
+        }
+        else if (score >= 80)
+        {
+            textAndBorderColor = new Color(0.145f, 0.337f, 0.922f);
+            solidPastelFillColor = new Color(0.88f, 0.91f, 0.99f);
+        }
+        else if (score >= 70)
+        {
+            textAndBorderColor = new Color(0.75f, 0.40f, 0.01f);
+            solidPastelFillColor = new Color(0.99f, 0.97f, 0.82f);
+        }
+        else
+        {
+            textAndBorderColor = new Color(0.863f, 0.149f, 0.149f);
+            solidPastelFillColor = new Color(0.99f, 0.88f, 0.88f);
+        }
+
+        if (scoreText != null) scoreText.color = textAndBorderColor;
+        if (performanceTitle != null) performanceTitle.color = textAndBorderColor;
+        if (scoreCircleBorder != null) scoreCircleBorder.color = textAndBorderColor;
+        if (scoreCircleFill != null) scoreCircleFill.color = solidPastelFillColor;
+    }
+
+    Color GetBorderColor(int score)
+    {
+        if (score >= 90) return new Color(0.086f, 0.635f, 0.290f);
+        if (score >= 80) return new Color(0.145f, 0.337f, 0.922f);
+        if (score >= 70) return new Color(0.75f, 0.40f, 0.01f);
+        return new Color(0.863f, 0.149f, 0.149f);
+    }
+
+    void AnimateEntrance(ScoringResult result)
+    {
         if (scoreText != null)
         {
             int target = result.finalScore;
-            DOTween.To(
-                () => 0,
-                x => scoreText.text = $"{x}%",
-                target, 1.2f)
+            DOTween.To(() => 0, x => scoreText.text = $"{x}%", target, 1.2f)
                 .SetEase(Ease.OutCubic)
                 .SetDelay(0.3f);
         }
 
-        // Scale circle from 0
         if (scoreCircleFill != null)
         {
-            Transform parent =
-                scoreCircleFill.transform.parent;
+            Transform parent = scoreCircleFill.transform.parent;
             if (parent != null)
             {
                 parent.localScale = Vector3.zero;
-                parent.DOScale(1f, 0.5f)
-                    .SetEase(Ease.OutBack)
-                    .SetDelay(0.1f);
+                parent.DOScale(1f, 0.5f).SetEase(Ease.OutBack).SetDelay(0.1f);
             }
         }
 
-        // Performance title fades + slides up
-        if (performanceTitle != null)
+        // FIXED SLIDE TEXT: Always animate directly to cached target properties
+        if (performanceTitle != null && _hasCapturedTitlePosition)
         {
-            CanvasGroup cg =
-                performanceTitle.GetComponent<CanvasGroup>()
-                ?? performanceTitle.gameObject
-                    .AddComponent<CanvasGroup>();
+            CanvasGroup cg = performanceTitle.GetComponent<CanvasGroup>() ?? performanceTitle.gameObject.AddComponent<CanvasGroup>();
+            cg.DOKill();
             cg.alpha = 0f;
             cg.DOFade(1f, 0.4f).SetDelay(0.6f);
 
-            RectTransform rt =
-                performanceTitle.GetComponent<RectTransform>();
-            rt.anchoredPosition += new Vector2(0, -15);
-            rt.DOAnchorPosY(
-                rt.anchoredPosition.y + 15, 0.4f)
-                .SetDelay(0.6f)
-                .SetEase(Ease.OutCubic);
+            RectTransform rt = performanceTitle.GetComponent<RectTransform>();
+            rt.DOKill();
+            rt.anchoredPosition = _originalTitlePosition + new Vector2(0, -15);
+            rt.DOAnchorPosY(_originalTitlePosition.y, 0.4f).SetDelay(0.6f).SetEase(Ease.OutCubic);
         }
     }
 
@@ -297,35 +311,53 @@ public class FeedbackSceneController : MonoBehaviour
             });
     }
 
+    // FIXED: Formats the entire overlay framework to gray fallback styles for empty placeholder states
     void ShowPlaceholder()
     {
+        Color placeholderGray = new Color(0.443f, 0.451f, 0.529f); // #71718A Clean slate gray color look
+        Color lightGrayBackground = new Color(0.94f, 0.94f, 0.95f);
+
         if (scoreText != null)
         {
             scoreText.text = "--";
-            scoreText.color = new Color(0.443f, 0.451f, 0.529f);
+            scoreText.color = placeholderGray;
         }
+
+        if (scoreCircleBorder != null) scoreCircleBorder.color = placeholderGray;
+        if (scoreCircleFill != null) scoreCircleFill.color = lightGrayBackground;
+
         if (performanceTitle != null)
+        {
             performanceTitle.text = "No Results Yet";
+            performanceTitle.color = placeholderGray;
+        }
+
         if (performanceSubtitle != null)
-            performanceSubtitle.text =
-                "Complete a simulation to see your results";
+        {
+            performanceSubtitle.text = "Complete a simulation to see your results";
+            performanceSubtitle.color = placeholderGray;
+        }
+
+        // Set card labels to clean, empty default placeholders
+        if (accuracyValue != null) { accuracyValue.text = "--%"; accuracyValue.color = placeholderGray; }
+        if (accuracyLabel != null) { accuracyLabel.text = "No Score..."; accuracyLabel.color = placeholderGray; }
+        if (accuracyIconBg != null) accuracyIconBg.color = new Color(0.5f, 0.5f, 0.5f, 0.1f);
+
+        if (speedValue != null) { speedValue.text = "--%"; speedValue.color = placeholderGray; }
+        if (speedLabel != null) { speedLabel.text = "No Score..."; speedLabel.color = placeholderGray; }
+        if (speedIconBg != null) speedIconBg.color = new Color(0.5f, 0.5f, 0.5f, 0.1f);
+
+        // Hide structural selection pill sub-elements safely
+        if (triageAssessmentContainer != null)
+            triageAssessmentContainer.SetActive(false);
+
+        if (explanationText != null)
+            explanationText.text = "No evaluation feedback has been computed yet. Head over to the selection panel and complete a scenario to populate this layout box.";
+
         if (nextScenarioButton != null)
             nextScenarioButton.interactable = false;
     }
 
-    // ── Score → Color ─────────────────────────────────
-    Color GetScoreColor(int score)
-    {
-        if (score >= 90)
-            return new Color(0.086f, 0.635f, 0.290f); // green
-        if (score >= 80)
-            return new Color(0.145f, 0.337f, 0.922f); // blue
-        if (score >= 70)
-            return new Color(0.851f, 0.467f, 0.024f); // yellow
-        return new Color(0.863f, 0.149f, 0.149f);     // red
-    }
-
-    // ── Score → Title ─────────────────────────────────
     string GetPerformanceTitle(int score)
     {
         if (score >= 90) return "Excellent Clinical Readiness!";
@@ -334,26 +366,17 @@ public class FeedbackSceneController : MonoBehaviour
         return "Needs Improvement";
     }
 
-    // ── Score → Subtitle ──────────────────────────────
     string GetPerformanceSubtitle(int score, bool isCorrect)
     {
-        if (score >= 90)
-            return "Outstanding triage performance. " +
-                   "You're ready for clinical duty.";
-        if (score >= 80)
-            return "Strong triage skills. " +
-                   "Keep practicing to reach excellence.";
+        if (score >= 90) return "Outstanding triage performance. You're ready for clinical duty.";
+        if (score >= 80) return "Strong triage skills. Keep practicing to reach excellence.";
         if (score >= 70)
             return isCorrect
-                ? "You made the correct decision but " +
-                  "could improve your response speed."
-                : "Review the START protocol to strengthen " +
-                  "your triage accuracy.";
-        return "Review the START triage algorithm " +
-               "and retry the scenario.";
+                ? "You made the correct decision but could improve your response speed."
+                : "Review the START protocol to strengthen your triage accuracy.";
+        return "Review the START triage algorithm and retry the scenario.";
     }
 
-    // ── Triage helpers ────────────────────────────────
     string GetTriageLabel(TriageCategory cat) => cat switch
     {
         TriageCategory.Immediate => "Red — Immediate",
@@ -365,19 +388,12 @@ public class FeedbackSceneController : MonoBehaviour
 
     Color GetTriagePillColor(TriageCategory cat) => cat switch
     {
-        TriageCategory.Immediate =>
-            new Color(0.863f, 0.149f, 0.149f),
-        TriageCategory.Delayed =>
-            new Color(0.996f, 0.878f, 0.282f),
-        TriageCategory.Minor =>
-            new Color(0.086f, 0.635f, 0.290f),
-        TriageCategory.Expectant =>
-            new Color(0.118f, 0.161f, 0.231f),
+        TriageCategory.Immediate => new Color(0.863f, 0.149f, 0.149f),
+        TriageCategory.Delayed => new Color(0.996f, 0.878f, 0.282f),
+        TriageCategory.Minor => new Color(0.086f, 0.635f, 0.290f),
+        TriageCategory.Expectant => new Color(0.118f, 0.161f, 0.231f),
         _ => Color.gray
     };
 
-    Color GetTriagePillTextColor(TriageCategory cat) =>
-        cat == TriageCategory.Delayed
-            ? new Color(0.522f, 0.302f, 0.008f)
-            : Color.white;
+    Color GetTriagePillTextColor(TriageCategory cat) => cat == TriageCategory.Delayed ? new Color(0.522f, 0.302f, 0.008f) : Color.white;
 }

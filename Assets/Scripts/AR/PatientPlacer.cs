@@ -37,12 +37,20 @@ public class PatientPlacer : MonoBehaviour
         var touch = Touchscreen.current.primaryTouch;
         if (!touch.press.wasPressedThisFrame) return;
 
+        // ADD THIS DEBUG:
+        Debug.Log($"TAP detected! Prefab = {patientPrefab?.name ?? "NULL"}");
+
         Vector2 touchPosition = touch.position.ReadValue();
 
         if (_raycastManager.Raycast(
-            touchPosition, _hits, TrackableType.PlaneWithinPolygon))
+            touchPosition, _hits,
+            TrackableType.PlaneWithinPolygon))
         {
             PlacePatient(_hits[0].pose);
+        }
+        else
+        {
+            Debug.Log("No AR plane hit detected");
         }
     }
 
@@ -50,14 +58,16 @@ public class PatientPlacer : MonoBehaviour
     {
         if (patientPrefab == null)
         {
-            Debug.LogError("PatientPlacer: No patient prefab!");
+            Debug.LogError("PATIENT PREFAB IS NULL!");
             return;
         }
+
+        Debug.Log($"Placing patient: {patientPrefab.name}");
 
         _spawnedPatient = Instantiate(
             patientPrefab, pose.position, pose.rotation);
 
-        // ← ADD THIS: Force correct scale for AR
+        // Force correct scale
         _spawnedPatient.transform.localScale =
             new Vector3(0.5f, 0.5f, 0.5f);
 
@@ -77,7 +87,7 @@ public class PatientPlacer : MonoBehaviour
 
         OnPatientPlaced?.Invoke();
 
-        Debug.Log("Patient placed at: " + pose.position);
+        Debug.Log("Patient placed successfully!");
     }
 
     public void ResetPlacement()

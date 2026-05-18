@@ -13,6 +13,18 @@ PrefabInstance:
       value: Patient_Fracture
       objectReference: {fileID: 0}
     - target: {fileID: 3447742079981357586, guid: 52521345a92e70f4096c92a8ca63e7da, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3447742079981357586, guid: 52521345a92e70f4096c92a8ca63e7da, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3447742079981357586, guid: 52521345a92e70f4096c92a8ca63e7da, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3447742079981357586, guid: 52521345a92e70f4096c92a8ca63e7da, type: 3}
       propertyPath: m_LocalPosition.x
       value: 4.81778
       objectReference: {fileID: 0}

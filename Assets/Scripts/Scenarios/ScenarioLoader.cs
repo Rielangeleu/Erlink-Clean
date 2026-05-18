@@ -1,4 +1,6 @@
 using UnityEngine;
+using System;
+using System.Reflection;
 
 public class ScenarioLoader : MonoBehaviour
 {
@@ -8,7 +10,11 @@ public class ScenarioLoader : MonoBehaviour
     [Header("Dependencies")]
     public UIManager uiManager;
     public RPMSequenceController rpmController;
-    public PatientPlacer patientPlacer;
+
+    // REPLACED: patientPlacer removed to use template's working spawner
+    [Header("AR Spawner System")]
+    public MonoBehaviour objectSpawner;
+
     public PatientInfoCardUI patientInfoCardUI;
     public ScoringSystem scoringSystem;
 
@@ -16,18 +22,41 @@ public class ScenarioLoader : MonoBehaviour
 
     void Start()
     {
-        ScenarioData toLoad =
-            ScenarioSelector.SelectedScenario ?? scenarioToLoad;
+        // Automatically look for the template's ObjectSpawner if not assigned in Inspector
+        if (objectSpawner == null)
+        {
+            FindObjectSpawnerDynamic();
+        }
 
+        // If ScenarioManager is in the scene, let IT call LoadScenario instead!
+        if (FindAnyObjectByType<ScenarioManager>() != null)
+        {
+            Debug.Log("ScenarioLoader: Deferring initialization to ScenarioManager.");
+            return;
+        }
+
+        // Fallback if testing the scene completely by itself
+        ScenarioData toLoad = ScenarioSelector.SelectedScenario ?? scenarioToLoad;
         if (toLoad != null)
             LoadScenario(toLoad);
+    }
+
+    void FindObjectSpawnerDynamic()
+    {
+        foreach (MonoBehaviour mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+        {
+            if (mb != null && mb.GetType().Name == "ObjectSpawner")
+            {
+                objectSpawner = mb;
+                break;
+            }
+        }
     }
 
     public void LoadScenario(ScenarioData scenario)
     {
         _activeScenario = scenario;
 
-        // ADD THESE DEBUG LINES:
         Debug.Log($"Loading scenario: {scenario.scenarioTitle}");
         Debug.Log($"Patient prefab: {scenario.patientPrefab?.name ?? "NULL"}");
 
@@ -38,28 +67,62 @@ public class ScenarioLoader : MonoBehaviour
         if (patientInfoCardUI != null)
             patientInfoCardUI.PopulateFromScenario(scenario);
 
-        // This is the key line — make sure it's here:
+        // Inject the active 3D prefab into the AR template's spawner system dynamically
         if (scenario.patientPrefab != null)
-            patientPlacer.patientPrefab = scenario.patientPrefab;
+        {
+            AssignPrefabToSpawner(scenario.patientPrefab);
+        }
         else
+        {
             Debug.LogError("ScenarioLoader: Patient prefab is NULL in ScriptableObject!");
+        }
 
         if (scoringSystem != null)
             scoringSystem.SetActiveScenario(scenario);
         if (scoringSystem != null)
             scoringSystem.ResetScoring();
 
-        patientPlacer.OnPatientPlaced -= StartRPMAssessment;
-        patientPlacer.OnPatientPlaced += StartRPMAssessment;
-
         Debug.Log($"Loaded scenario: {scenario.scenarioTitle}");
     }
 
-    void StartRPMAssessment()
+    void AssignPrefabToSpawner(GameObject prefab)
     {
-        // Unsubscribe to prevent duplicate calls
-        patientPlacer.OnPatientPlaced -= StartRPMAssessment;
-        rpmController.StartRPMAssessment(_activeScenario);
+        if (objectSpawner == null) FindObjectSpawnerDynamic();
+
+        if (objectSpawner != null)
+        {
+            try
+            {
+                // The template's spawner holds prefabs inside a List or Array field named 'objectPrefabs' or 'm_ObjectPrefabs'
+                Type spawnerType = objectSpawner.GetType();
+                FieldInfo prefabsField = spawnerType.GetField("objectPrefabs", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                                      ?? spawnerType.GetField("m_ObjectPrefabs", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (prefabsField != null)
+                {
+                    // Create a new list structure containing just our active scenario's patient model
+                    var listType = typeof(System.Collections.Generic.List<>).MakeGenericType(typeof(GameObject));
+                    var newList = Activator.CreateInstance(listType);
+                    listType.GetMethod("Add").Invoke(newList, new object[] { prefab });
+
+                    // Inject the new list right back into the template system component
+                    prefabsField.SetValue(objectSpawner, newList);
+                    Debug.Log($"ScenarioLoader: Successfully injected {prefab.name} into template ObjectSpawner! ✅");
+                }
+                else
+                {
+                    Debug.LogError("ScenarioLoader: Could not locate a prefab collection field on the template ObjectSpawner component.");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"ScenarioLoader: Dynamic asset assignment failed: {e.Message}");
+            }
+        }
+        else
+        {
+            Debug.LogError("ScenarioLoader: Cannot assign active prefab because ObjectSpawner was not found in the scene layout!");
+        }
     }
 
     public ScenarioData GetActiveScenario() => _activeScenario;

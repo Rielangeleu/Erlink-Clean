@@ -16,7 +16,6 @@ public class ScenarioManager : MonoBehaviour
 
     [Header("Dependencies")]
     public ScenarioLoader scenarioLoader;
-    public PatientPlacer patientPlacer;
     public UIManager uiManager;
     public TimerSystem timerSystem;
 
@@ -37,8 +36,7 @@ public class ScenarioManager : MonoBehaviour
         // Load based on ScenarioSelector
         if (ScenarioSelector.SelectedScenario != null)
         {
-            if (ScenarioSelector.SelectedDifficulty ==
-                DifficultyLevel.Medium)
+            if (ScenarioSelector.SelectedDifficulty == DifficultyLevel.Medium)
             {
                 StartMediumScenario();
             }
@@ -65,8 +63,7 @@ public class ScenarioManager : MonoBehaviour
     public void StartMediumScenario()
     {
         _activeDifficulty = DifficultyLevel.Medium;
-        _activeScenarios = new ScenarioData[]
-            { mediumPatientA, mediumPatientB };
+        _activeScenarios = new ScenarioData[] { mediumPatientA, mediumPatientB };
         _currentPatientIndex = 0;
         LoadCurrentPatient();
     }
@@ -79,8 +76,7 @@ public class ScenarioManager : MonoBehaviour
         if (_activeDifficulty == DifficultyLevel.Medium)
         {
             uiManager.SetScenarioTitle(
-                $"Patient {_currentPatientIndex + 1} of 2 — " +
-                scenario.scenarioTitle);
+                $"Patient {_currentPatientIndex + 1} of 2 — " + scenario.scenarioTitle);
         }
 
         scenarioLoader.LoadScenario(scenario);
@@ -100,8 +96,12 @@ public class ScenarioManager : MonoBehaviour
 
         if (_currentPatientIndex < _activeScenarios.Length)
         {
-            // Reset patient placer for next patient
-            patientPlacer.ResetPlacement();
+            // Reset the template spawner bridge status so it allows spawning the next patient model
+            ObjectSpawnerBridge bridge = FindFirstObjectByType<ObjectSpawnerBridge>();
+            if (bridge != null)
+            {
+                bridge.ResetPlacement();
+            }
 
             // Small delay before next patient
             Invoke(nameof(LoadCurrentPatient), 1.5f);
@@ -113,17 +113,11 @@ public class ScenarioManager : MonoBehaviour
         }
     }
 
-    public bool IsLastPatient()
-    {
-        return _currentPatientIndex >=
-            _activeScenarios.Length - 1;
-    }
+    public bool IsLastPatient() => _currentPatientIndex >= _activeScenarios.Length - 1;
 
-    public int GetCurrentPatientIndex()
-        => _currentPatientIndex;
+    public int GetCurrentPatientIndex() => _currentPatientIndex;
 
-    public DifficultyLevel GetActiveDifficulty()
-        => _activeDifficulty;
+    public DifficultyLevel GetActiveDifficulty() => _activeDifficulty;
 
     void LoadFeedbackScene()
     {

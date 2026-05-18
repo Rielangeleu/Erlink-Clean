@@ -3,13 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using DG.Tweening;
-using System.Collections.Generic;
 
-/// <summary>
-/// Controls the circular drop zone over the patient.
-/// Detects when a triage tag is dropped on it.
-/// Activates Submit button when a valid tag is placed.
-/// </summary>
 public class DropZoneController : MonoBehaviour, IDropHandler
 {
     [Header("UI References")]
@@ -40,58 +34,81 @@ public class DropZoneController : MonoBehaviour, IDropHandler
 
     public bool IsPointerOverDropZone(PointerEventData eventData)
     {
-        // Check if pointer is within drop zone bounds
-        return RectTransformUtility.RectangleContainsScreenPoint(
+        if (_rectTransform == null) _rectTransform = GetComponent<RectTransform>();
+
+        // Fail-safe 1: Standard rectangle boundary check
+        bool insideRect = RectTransformUtility.RectangleContainsScreenPoint(
             _rectTransform,
             eventData.position,
             eventData.pressEventCamera);
+
+        if (insideRect) return true;
+
+        // Fail-safe 2: Distance-based fallback check (Great for varied mobile resolutions)
+        float distance = Vector2.Distance(transform.position, eventData.position);
+        return distance < 120f; // Registers a match if dropped within a 120-pixel radius of center
     }
 
     public void OnTagDropped(TriageDragDrop tag)
     {
-        // Remove previous tag if any
         if (_currentTag != null && _currentTag != tag)
-            _currentTag.ResetTag();
+            _currentTag.ReturnToOrigin();
 
         _currentTag = tag;
         _hasTag = true;
 
-        // Visual feedback
-        dropZoneImage.DOColor(droppedColor, 0.3f);
-        dropZoneLabel.text = GetTagLabel(tag.triageCategory);
-        dropZoneLabel.color = Color.white;
+        // Ensure target visual components are valid before running DOTween animations
+        if (dropZoneImage != null)
+        {
+            dropZoneImage.DOKill();
+            dropZoneImage.DOColor(droppedColor, 0.3f);
+        }
 
-        // Pulse animation
-        _rectTransform.DOPunchScale(
-            new Vector3(0.05f, 0.05f, 0), 0.4f, 5, 0.5f);
+        if (dropZoneLabel != null)
+        {
+            dropZoneLabel.text = GetTagLabel(tag.triageCategory);
+            dropZoneLabel.color = Color.white;
+        }
 
-        // Enable submit button
+        _rectTransform.DOKill();
+        _rectTransform.DOPunchScale(new Vector3(0.05f, 0.05f, 0), 0.4f, 5, 0.5f);
+
+        // Force enable submit button
         SetSubmitEnabled(true);
-
-        Debug.Log($"Drop zone received: {tag.triageCategory}");
+        Debug.Log($"Drop zone successfully locked tag: {tag.triageCategory} ✅");
     }
 
     public void OnDrop(PointerEventData eventData)
     {
-        // Unity's built-in drop handler as backup
+        // Engine backup interface handler
+        TriageDragDrop dragTag = eventData.pointerDrag?.GetComponent<TriageDragDrop>();
+        if (dragTag != null)
+        {
+            OnTagDropped(dragTag);
+        }
     }
 
-    void SetSubmitEnabled(bool enabled)
+    public void SetSubmitEnabled(bool enabled)
     {
-        submitButton.interactable = enabled;
+        if (submitButton != null) submitButton.interactable = enabled;
 
-        submitButtonImage.DOColor(
-            enabled ? enabledColor : disabledColor, 0.3f);
+        if (submitButtonImage != null)
+        {
+            submitButtonImage.DOKill();
+            submitButtonImage.DOColor(enabled ? enabledColor : disabledColor, 0.3f);
+        }
 
-        Color textColor = Color.white;
-        textColor.a = enabled ? 1f : 0.5f;
-        submitButtonText.color = textColor;
+        if (submitButtonText != null)
+        {
+            Color textColor = Color.white;
+            textColor.a = enabled ? 1f : 0.5f;
+            submitButtonText.color = textColor;
+        }
     }
 
     public TriageCategory GetSelectedCategory()
     {
-        return _currentTag != null ?
-            _currentTag.triageCategory : TriageCategory.Minor;
+        return _currentTag != null ? _currentTag.triageCategory : TriageCategory.Minor;
     }
 
     public bool HasTag() => _hasTag;
@@ -99,27 +116,32 @@ public class DropZoneController : MonoBehaviour, IDropHandler
     public void ResetDropZone()
     {
         if (_currentTag != null)
-            _currentTag.ResetTag();
+            _currentTag.ReturnToOrigin();
 
         _currentTag = null;
         _hasTag = false;
 
-        dropZoneImage.DOColor(defaultColor, 0.3f);
-        dropZoneLabel.text = "Drop Tag Here";
-        dropZoneLabel.color = new Color(0.392f, 0.451f, 0.529f);
+        if (dropZoneImage != null)
+        {
+            dropZoneImage.DOKill();
+            dropZoneImage.DOColor(defaultColor, 0.3f);
+        }
+
+        if (dropZoneLabel != null)
+        {
+            dropZoneLabel.text = "Drop Tag Here";
+            dropZoneLabel.color = new Color(0.392f, 0.451f, 0.529f);
+        }
 
         SetSubmitEnabled(false);
     }
 
-    string GetTagLabel(TriageCategory cat)
+    string GetTagLabel(TriageCategory cat) => cat switch
     {
-        return cat switch
-        {
-            TriageCategory.Immediate => "RED — Immediate",
-            TriageCategory.Delayed => "YELLOW — Delayed",
-            TriageCategory.Minor => "GREEN — Minor",
-            TriageCategory.Expectant => "BLACK — Deceased",
-            _ => "Tag Placed"
-        };
-    }
+        TriageCategory.Immediate => "RED — Immediate",
+        TriageCategory.Delayed => "YELLOW — Delayed",
+        TriageCategory.Minor => "GREEN — Minor",
+        TriageCategory.Expectant => "BLACK — Deceased",
+        _ => "Tag Placed"
+    };
 }

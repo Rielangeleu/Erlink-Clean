@@ -3,11 +3,12 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using DG.Tweening;
+using System.Collections;
 
 /// <summary>
 /// Handles dragging triage tags onto the patient drop zone.
 /// Implements thesis requirement: drag-and-drop triage tagging.
-/// Submit button only activates after a tag is dropped on the zone.
+/// Fixes the drop alignment by snapping precisely to the drop zone's world center.
 /// </summary>
 public class TriageDragDrop : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler
@@ -29,34 +30,44 @@ public class TriageDragDrop : MonoBehaviour,
     private Vector2 _originalPosition;
     private Transform _originalParent;
     private bool _isDropped = false;
+    private bool _hasCapturedHome = false;
 
     void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
-        _canvasGroup = GetComponent<CanvasGroup>();
-        if (_canvasGroup == null)
-            _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        _canvasGroup = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
 
-        _originalPosition = _rectTransform.anchoredPosition;
         _originalParent = transform.parent;
-        normalColor = tagImage != null ?
-            tagImage.color : Color.white;
+        normalColor = tagImage != null ? tagImage.color : Color.white;
+    }
+
+    void Start()
+    {
+        // Safe Check: Wait for the layout pass loop to finish arranging columns before saving coordinates
+        StartCoroutine(CaptureHomePositionPass());
+    }
+
+    IEnumerator CaptureHomePositionPass()
+    {
+        yield return new WaitForEndOfFrame();
+        _originalPosition = _rectTransform.anchoredPosition;
+        _hasCapturedHome = true;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (_isDropped) return;
 
-        _originalPosition = _rectTransform.anchoredPosition;
+        // Fallback capture if things load out of frame sequence order
+        if (!_hasCapturedHome)
+        {
+            _originalPosition = _rectTransform.anchoredPosition;
+            _hasCapturedHome = true;
+        }
 
-        // Make semi-transparent while dragging
         _canvasGroup.alpha = 0.8f;
         _canvasGroup.blocksRaycasts = false;
 
-        // Bring to front
-        transform.SetAsLastSibling();
-
-        // Scale up slightly — Framer Motion whileDrag equivalent
         _rectTransform.DOScale(1.08f, 0.15f).SetEase(Ease.OutBack);
     }
 
@@ -64,15 +75,8 @@ public class TriageDragDrop : MonoBehaviour,
     {
         if (_isDropped) return;
 
-        // Move with finger
-        Vector2 pos;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            canvas.transform as RectTransform,
-            eventData.position,
-            eventData.pressEventCamera,
-            out pos);
-
-        _rectTransform.anchoredPosition = pos;
+        // Keeps your exact working mouse tracking structure untouched!
+        transform.position = eventData.position;
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -83,14 +87,12 @@ public class TriageDragDrop : MonoBehaviour,
         _canvasGroup.blocksRaycasts = true;
         _rectTransform.DOScale(1f, 0.15f);
 
-        // Check if dropped on drop zone
         if (dropZone != null && dropZone.IsPointerOverDropZone(eventData))
         {
             DropOnZone();
         }
         else
         {
-            // Snap back to original position
             ReturnToOrigin();
         }
     }
@@ -99,25 +101,33 @@ public class TriageDragDrop : MonoBehaviour,
     {
         _isDropped = true;
 
-        // Animate to drop zone center
-        Vector2 dropCenter = dropZone.GetComponent<RectTransform>()
-            .anchoredPosition;
+        if (dropZone != null)
+        {
+            _rectTransform.DOKill();
 
-        _rectTransform.DOAnchorPos(dropCenter, 0.25f)
-            .SetEase(Ease.OutCubic);
-        _rectTransform.DOScale(0.85f, 0.25f);
+            // ── FIX: Snap perfectly to the drop zone's absolute world position center ──
+            // This bypasses parent layout group scaling and keeps it locked exactly in the circle!
+            transform.DOMove(dropZone.transform.position, 0.25f).SetEase(Ease.OutCubic);
+            _rectTransform.DOScale(0.85f, 0.25f);
 
-        // Notify drop zone
-        dropZone.OnTagDropped(this);
-
-        Debug.Log($"Tag dropped: {triageCategory}");
+            dropZone.OnTagDropped(this);
+            Debug.Log($"Tag dropped cleanly: {triageCategory}");
+        }
     }
 
     public void ReturnToOrigin()
     {
         _isDropped = false;
-        _rectTransform.DOAnchorPos(_originalPosition, 0.3f)
-            .SetEase(Ease.OutBack);
+
+        if (_canvasGroup != null)
+        {
+            _canvasGroup.alpha = 1f;
+            _canvasGroup.blocksRaycasts = true;
+        }
+
+        // Animate using DOAnchorPos back to the cached slot captured right at Start()!
+        _rectTransform.DOKill();
+        _rectTransform.DOAnchorPos(_originalPosition, 0.3f).SetEase(Ease.OutBack);
         _rectTransform.DOScale(1f, 0.2f);
     }
 

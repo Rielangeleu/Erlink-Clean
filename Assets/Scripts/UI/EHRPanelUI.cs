@@ -29,25 +29,36 @@ public class EHRPanelUI : MonoBehaviour
 
     public void PopulateEHRActions(ScenarioData scenario)
     {
-        if (scenario.ehrActions == null) return;
+        if (scenario == null || scenario.ehrActions == null) return;
+
+        // Reset interaction lock tracking state flags
+        _answered = false;
+
+        if (feedbackPanel != null)
+            feedbackPanel.SetActive(false);
 
         for (int i = 0; i < ehrOptionButtons.Length; i++)
         {
             if (i < scenario.ehrActions.Length)
             {
                 ehrOptionButtons[i].gameObject.SetActive(true);
-                ehrOptionTexts[i].text =
-                    scenario.ehrActions[i].actionName;
+
+                // Re-enable button interaction tracking states for the incoming patient assignment
+                ehrOptionButtons[i].interactable = true;
+
+                // Re-assign button background color back to its standard tint look definition metrics
+                var img = ehrOptionButtons[i].GetComponent<UnityEngine.UI.Image>();
+                if (img != null) img.color = defaultColor;
+
+                ehrOptionTexts[i].text = scenario.ehrActions[i].actionName;
+                ehrOptionTexts[i].color = new Color(0.12f, 0.16f, 0.23f); // Clean dark slate text color layer look
             }
             else
             {
+                // Turn off extra slots cleanly if the incoming scenario has fewer than 3 options
                 ehrOptionButtons[i].gameObject.SetActive(false);
             }
         }
-
-        _answered = false;
-        if (feedbackPanel != null)
-            feedbackPanel.SetActive(false);
     }
 
     public void OnEHROptionSelected(int index)
@@ -58,17 +69,23 @@ public class EHRPanelUI : MonoBehaviour
         ScenarioData scenario = scenarioLoader.GetActiveScenario();
         bool isCorrect = scenario.ehrActions[index].isCorrectAction;
 
-        // Color feedback
         Color resultColor = isCorrect ? correctColor : wrongColor;
-        ehrOptionButtons[index].GetComponent<Image>()
-            .DOColor(resultColor, 0.3f);
-        ehrOptionTexts[index].color = Color.white;
 
-        // Punch animation
-        ehrOptionButtons[index].GetComponent<RectTransform>()
-            .DOPunchScale(new Vector3(0.05f, 0.05f, 0), 0.3f);
+        // Fix: Verify image exists before running DOTween
+        Image btnImage = ehrOptionButtons[index].GetComponent<Image>();
+        if (btnImage != null)
+        {
+            btnImage.DOKill();
+            btnImage.DOColor(resultColor, 0.3f);
+        }
 
-        // Show feedback
+        RectTransform btnRt = ehrOptionButtons[index].GetComponent<RectTransform>();
+        if (btnRt != null)
+        {
+            btnRt.DOKill();
+            btnRt.DOPunchScale(new Vector3(0.05f, 0.05f, 0), 0.3f);
+        }
+
         if (feedbackPanel != null && feedbackText != null)
         {
             feedbackPanel.SetActive(true);
@@ -78,11 +95,9 @@ public class EHRPanelUI : MonoBehaviour
             feedbackText.color = resultColor;
         }
 
-        // Disable all buttons
         foreach (var btn in ehrOptionButtons)
-            btn.interactable = false;
+            if (btn != null) btn.interactable = false;
 
-        // Notify decision manager after delay
         Invoke(nameof(NotifyDecisionManager), 2f);
         _isCorrect = isCorrect;
     }

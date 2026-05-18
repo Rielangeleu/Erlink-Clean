@@ -4,6 +4,7 @@ using TMPro;
 
 /// <summary>
 /// Controls all UI elements during an AR triage scenario.
+/// Updated to match the specific PatientInfoCard hierarchy configuration.
 /// </summary>
 public class UIManager : MonoBehaviour
 {
@@ -21,13 +22,14 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI codeAlertText;
     public GameObject placementPrompt;
 
-    [Header("Submit Button")]
-    public Button submitButton;
-
-    [Header("Scenario Card")]
-    public GameObject scenarioCard;
+    // ── REMOVED OLD SCENARIO CARD / ADDED EXACT MATCH REFERENCE ──
+    [Header("Patient Info Card System")]
+    public GameObject patientInfoCard;
     public TextMeshProUGUI difficultyBadge;
     public TextMeshProUGUI patientStatusText;
+
+    [Header("Submit Button")]
+    public Button submitButton;
 
     [Header("Triage Colors")]
     public Color immediateColor = new Color(0.863f, 0.149f, 0.149f);
@@ -44,8 +46,9 @@ public class UIManager : MonoBehaviour
         if (submitButton != null)
             submitButton.interactable = false;
 
-        if (scenarioCard != null)
-            scenarioCard.SetActive(false);
+        // ── FIX: Ensure your actual PatientInfoCard STAYS VISIBLE on start ──
+        if (patientInfoCard != null)
+            patientInfoCard.SetActive(true);
     }
 
     // ── Scenario Title ───────────────────────────────────
@@ -71,14 +74,12 @@ public class UIManager : MonoBehaviour
     {
         if (triageTagsRow == null) return;
 
-        // Enable/disable all TriageDragDrop components
         foreach (var drag in
             triageTagsRow.GetComponentsInChildren<TriageDragDrop>())
         {
-            drag.enabled = interactable;
+            if (drag != null) drag.enabled = interactable;
         }
 
-        // Also toggle CanvasGroup alpha for visual feedback
         CanvasGroup cg = triageTagsRow.GetComponent<CanvasGroup>();
         if (cg != null)
         {
@@ -88,7 +89,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Keep this for backward compatibility with older scripts
     public void SetTriageButtonsInteractable(bool interactable)
     {
         SetTriageTagsInteractable(interactable);
@@ -128,11 +128,11 @@ public class UIManager : MonoBehaviour
             codeAlertBanner.SetActive(false);
     }
 
-    // ── Scenario Card ────────────────────────────────────
+    // ── Keep method compatible with older scene references ──
     public void ShowScenarioCard(string difficulty, string status)
     {
-        if (scenarioCard == null) return;
-        scenarioCard.SetActive(true);
+        if (patientInfoCard != null)
+            patientInfoCard.SetActive(true);
         if (difficultyBadge != null)
             difficultyBadge.text = difficulty.ToUpper();
         if (patientStatusText != null)

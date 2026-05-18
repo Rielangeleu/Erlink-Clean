@@ -5,12 +5,12 @@ using System;
 
 /// <summary>
 /// Controls the sequential RPM assessment.
-/// Enforces R → P → M order per thesis rules.
-/// Triage buttons stay locked until all 3 steps complete.
+/// Displays all bubbles at once to test student critical thinking.
+/// Enforces R -> P -> M order strictly with generic error filtering.
 /// </summary>
 public class RPMSequenceController : MonoBehaviour
 {
-    [Header("UI References")]
+    [Header("UI Question Quiz Panels")]
     public GameObject rpmPanel;
     public TextMeshProUGUI stepTitleText;
     public TextMeshProUGUI questionText;
@@ -21,64 +21,189 @@ public class RPMSequenceController : MonoBehaviour
     public TextMeshProUGUI feedbackText;
     public GameObject feedbackPanel;
 
+    [Header("3D Interactive Viewport Bubbles")]
+    public GameObject respirationBubble;
+    public GameObject perfusionBubble;
+    public GameObject mentalBubble;
+
     [Header("Dependencies")]
     public UIManager uiManager;
+    public PatientInfoCardUI infoCardUI;
 
-    // Internal state
+    // Internal state management tracking
     private ScenarioData _currentScenario;
-    private int _currentStep = 0; // 0=R, 1=P, 2=M
-    private bool[] _stepCompleted = new bool[3];
+    private int _assessmentOrderIndex = 0; // 0 = Waiting for R, 1 = Waiting for P, 2 = Waiting for M, 3 = All Pills Shown
+    private int _quizStepIndex = 0;        // Controls the subsequent quiz panel question progression loop
     private int[] _selectedAnswers = new int[3];
 
     // Events
     public Action OnRPMComplete;
 
-    private string[] _stepNames = { "Respiration", "Perfusion", "Mental Status" };
-    private string[] _stepIcons = { "STEP 1 OF 3 — RESPIRATION",
-                                     "STEP 2 OF 3 — PERFUSION",
-                                     "STEP 3 OF 3 — MENTAL STATUS" };
+    private string[] _stepIcons = { "STEP 1 OF 3 — RESPIRATION ASSESSMENT",
+                                     "STEP 2 OF 3 — PERFUSION ASSESSMENT",
+                                     "STEP 3 OF 3 — MENTAL STATUS ASSESSMENT" };
 
     public void StartRPMAssessment(ScenarioData scenario)
     {
         _currentScenario = scenario;
-        _currentStep = 0;
-        _stepCompleted = new bool[3];
+        _assessmentOrderIndex = 0;
+        _quizStepIndex = 0;
         _selectedAnswers = new int[3];
 
-        // Show RPM panel, hide triage buttons
-        rpmPanel.SetActive(true);
-        uiManager.SetTriageButtonsInteractable(false);
+        // Enforce total interface isolation at startup
+        if (rpmPanel != null) rpmPanel.SetActive(false);
+        if (uiManager != null) uiManager.SetTriageButtonsInteractable(false);
 
-        LoadCurrentStep();
+        // SHOW ALL BUBBLES AT ONCE to force the student to make an intentional choice
+        if (respirationBubble != null) respirationBubble.SetActive(true);
+        if (perfusionBubble != null) perfusionBubble.SetActive(true);
+        if (mentalBubble != null) mentalBubble.SetActive(true);
+
+        Debug.Log("Sequential RPM Initialized: All bubbles visible. Enforcing R -> P -> M order.");
     }
 
-    void LoadCurrentStep()
+    // ── 3D WORLD INTERACTION CLICK HOOKS WITH ORDER & PLACEMENT VALIDATION ──
+
+    public void OnRespirationBubbleTapped()
+    {
+        // CRITICAL CHECK: Block clicks if no patient has been spawned into AR yet!
+        if (_currentScenario == null)
+        {
+            TriggerSequenceErrorAlert("You must tap the scene floor to place the patient first!");
+            return;
+        }
+
+        if (rpmPanel.activeSelf) return;
+
+        if (_assessmentOrderIndex == 0)
+        {
+            _assessmentOrderIndex = 1;
+            if (respirationBubble != null) respirationBubble.SetActive(false);
+
+            if (infoCardUI != null)
+                infoCardUI.RevealRespirationValue(_currentScenario.vitalSigns.Length > 0 ? _currentScenario.vitalSigns[0] : "Assessed");
+
+            CheckSequenceProgression();
+        }
+        else
+        {
+            TriggerSequenceErrorAlert("Incorrect Sequence!");
+        }
+    }
+
+    public void OnPerfusionBubbleTapped()
+    {
+        // CRITICAL CHECK: Block clicks if no patient has been spawned into AR yet!
+        if (_currentScenario == null)
+        {
+            TriggerSequenceErrorAlert("You must tap the scene floor to place the patient first!");
+            return;
+        }
+
+        if (rpmPanel.activeSelf) return;
+
+        if (_assessmentOrderIndex == 1)
+        {
+            _assessmentOrderIndex = 2;
+            if (perfusionBubble != null) perfusionBubble.SetActive(false);
+
+            if (infoCardUI != null)
+                infoCardUI.RevealPerfusionValue(_currentScenario.vitalSigns.Length > 1 ? _currentScenario.vitalSigns[1] : "Assessed");
+
+            CheckSequenceProgression();
+        }
+        else
+        {
+            TriggerSequenceErrorAlert("Incorrect Sequence!");
+        }
+    }
+
+    public void OnMentalBubbleTapped()
+    {
+        // CRITICAL CHECK: Block clicks if no patient has been spawned into AR yet!
+        if (_currentScenario == null)
+        {
+            TriggerSequenceErrorAlert("You must tap the scene floor to place the patient first!");
+            return;
+        }
+
+        if (rpmPanel.activeSelf) return;
+
+        if (_assessmentOrderIndex == 2)
+        {
+            _assessmentOrderIndex = 3;
+            if (mentalBubble != null) mentalBubble.SetActive(false);
+
+            if (infoCardUI != null)
+                infoCardUI.RevealMentalValue(_currentScenario.vitalSigns.Length > 2 ? _currentScenario.vitalSigns[2] : "Assessed");
+
+            CheckSequenceProgression();
+        }
+        else
+        {
+            TriggerSequenceErrorAlert("Incorrect Sequence!");
+        }
+    }
+
+    // ── INTERACTION SEQUENCE ROUTING LOGIC ──
+
+    void CheckSequenceProgression()
+    {
+        if (_assessmentOrderIndex == 3)
+        {
+            _quizStepIndex = 0;
+            Invoke(nameof(ShowCurrentQuestionQuizWindow), 0.5f);
+        }
+    }
+
+    void TriggerSequenceErrorAlert(string trackingMessage)
+    {
+        if (uiManager != null)
+        {
+            uiManager.ShowCodeAlert(trackingMessage);
+
+            CancelInvoke(nameof(ClearAlertBanner));
+            Invoke(nameof(ClearAlertBanner), 2.5f);
+        }
+    }
+
+    void ClearAlertBanner()
+    {
+        if (uiManager != null)
+            uiManager.HideCodeAlert();
+    }
+
+    void ShowCurrentQuestionQuizWindow()
+    {
+        if (rpmPanel != null) rpmPanel.SetActive(true);
+        LoadCurrentStepData();
+    }
+
+    void LoadCurrentStepData()
     {
         RPMAssessment rpm = _currentScenario.rpmAssessment;
         string question = "";
         string[] options = null;
 
-        switch (_currentStep)
+        switch (_quizStepIndex)
         {
-            case 0: // Respiration
+            case 0:
                 question = rpm.respirationQuestion;
                 options = rpm.respirationOptions;
                 break;
-            case 1: // Perfusion
+            case 1:
                 question = rpm.perfusionQuestion;
                 options = rpm.perfusionOptions;
                 break;
-            case 2: // Mental Status
+            case 2:
                 question = rpm.mentalStatusQuestion;
                 options = rpm.mentalStatusOptions;
                 break;
         }
 
-        // Update UI
-        stepTitleText.text = _stepIcons[_currentStep];
-        questionText.text = question;
+        if (stepTitleText != null) stepTitleText.text = _stepIcons[_quizStepIndex];
+        if (questionText != null) questionText.text = question;
 
-        // Set button texts and reset colors
         for (int i = 0; i < optionButtons.Length; i++)
         {
             if (i < options.Length)
@@ -87,7 +212,6 @@ public class RPMSequenceController : MonoBehaviour
                 optionButtonTexts[i].text = options[i];
                 optionButtons[i].interactable = true;
 
-                // Reset button color to white
                 optionButtons[i].GetComponent<Image>().color = Color.white;
                 optionButtonTexts[i].color = new Color(0.12f, 0.16f, 0.24f);
             }
@@ -97,21 +221,19 @@ public class RPMSequenceController : MonoBehaviour
             }
         }
 
-        // Hide feedback
         if (feedbackPanel != null)
             feedbackPanel.SetActive(false);
     }
 
-    // Called by each option button — assign button index 0, 1, 2
     public void OnOptionSelected(int selectedIndex)
     {
-        _selectedAnswers[_currentStep] = selectedIndex;
+        _selectedAnswers[_quizStepIndex] = selectedIndex;
         RPMAssessment rpm = _currentScenario.rpmAssessment;
 
         int correctIndex = 0;
         string feedback = "";
 
-        switch (_currentStep)
+        switch (_quizStepIndex)
         {
             case 0:
                 correctIndex = rpm.correctRespirationIndex;
@@ -129,65 +251,50 @@ public class RPMSequenceController : MonoBehaviour
 
         bool isCorrect = selectedIndex == correctIndex;
 
-        // Color the selected button
         Color selectedColor = isCorrect ?
-            new Color(0.086f, 0.635f, 0.29f) :  // green
-            new Color(0.863f, 0.149f, 0.149f);   // red
+            new Color(0.086f, 0.635f, 0.29f) :
+            new Color(0.863f, 0.149f, 0.149f);
 
         optionButtons[selectedIndex].GetComponent<Image>().color = selectedColor;
         optionButtonTexts[selectedIndex].color = Color.white;
 
-        // Show feedback
         if (feedbackPanel != null && feedbackText != null)
         {
             feedbackPanel.SetActive(true);
             feedbackText.text = feedback;
-            feedbackText.color = isCorrect ?
-                new Color(0.086f, 0.635f, 0.29f) :
-                new Color(0.863f, 0.149f, 0.149f);
+            feedbackText.color = selectedColor;
         }
 
-        _stepCompleted[_currentStep] = true;
-
-        // Disable buttons after selection
         foreach (var btn in optionButtons)
             btn.interactable = false;
 
-        // Move to next step after delay
-        Invoke(nameof(NextStep), 1.5f);
+        Invoke(nameof(NextQuizStep), 2.0f);
     }
 
-    void NextStep()
+    void NextQuizStep()
     {
-        _currentStep++;
+        if (rpmPanel != null) rpmPanel.SetActive(false);
 
-        if (_currentStep < 3)
+        _quizStepIndex++;
+
+        if (_quizStepIndex < 3)
         {
-            LoadCurrentStep();
+            ShowCurrentQuestionQuizWindow();
         }
         else
         {
-            // All 3 steps done
             CompleteRPM();
         }
     }
 
     void CompleteRPM()
     {
-        // Hide RPM panel
-        rpmPanel.SetActive(false);
+        if (rpmPanel != null) rpmPanel.SetActive(false);
+        if (uiManager != null) uiManager.SetTriageButtonsInteractable(true);
 
-        // Unlock triage buttons
-        uiManager.SetTriageButtonsInteractable(true);
-
-        // Fire completion event
         OnRPMComplete?.Invoke();
-
-        Debug.Log("RPM Assessment complete. Triage buttons unlocked.");
+        Debug.Log("All 3 sequential verification steps completed. Tags unlocked.");
     }
 
-    public int[] GetSelectedAnswers()
-    {
-        return _selectedAnswers;
-    }
+    public int[] GetSelectedAnswers() => _selectedAnswers;
 }
