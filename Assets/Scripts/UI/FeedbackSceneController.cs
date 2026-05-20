@@ -3,10 +3,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-/// <summary>
-/// Feedback Scene — ALL values driven by actual performance.
-/// No animations - static display only.
-/// </summary>
 public class FeedbackSceneController : MonoBehaviour
 {
     [Header("Score Circle")]
@@ -25,6 +21,11 @@ public class FeedbackSceneController : MonoBehaviour
     public TextMeshProUGUI speedValue;
     public TextMeshProUGUI speedLabel;
     public Image speedIconBg;
+
+    [Header("Confidence Card")]
+    public TextMeshProUGUI confidenceValue;
+    public TextMeshProUGUI confidenceLabel;
+    public Image confidenceIconBg;
 
     [Header("Triage Comparison Panel")]
     public GameObject triageAssessmentContainer;
@@ -72,21 +73,19 @@ public class FeedbackSceneController : MonoBehaviour
 
     void PopulateResults(ScoringResult result)
     {
-        string title = GetPerformanceTitle(result.finalScore);
-        string subtitle = GetPerformanceSubtitle(result.finalScore, result.isCorrect);
+        // Calculate triage correctness directly from selected vs correct
+        bool triageCorrect = (result.selectedCategory == result.correctCategory);
 
-        // Set colors and values
+        string title = GetPerformanceTitle(result.finalScore);
+        string subtitle = GetPerformanceSubtitle(result.finalScore, triageCorrect);
+
         ApplyScoreCircleColors(result.finalScore);
 
         if (scoreText != null)
-        {
             scoreText.text = $"{result.finalScore}%";
-        }
 
         if (performanceTitle != null)
-        {
             performanceTitle.text = title;
-        }
 
         if (performanceSubtitle != null)
             performanceSubtitle.text = subtitle;
@@ -95,18 +94,17 @@ public class FeedbackSceneController : MonoBehaviour
         if (accuracyValue != null)
         {
             accuracyValue.text = $"{result.accuracyScore}%";
-            accuracyValue.color = GetBorderColor(result.accuracyScore);
+            accuracyValue.color = GetScoreColor(result.accuracyScore);
         }
 
         if (accuracyLabel != null)
         {
-            bool correct = result.isCorrect;
-            accuracyLabel.text = correct ? "Correct triage ✓" : "Incorrect triage ✗";
-            accuracyLabel.color = correct ? new Color(0.086f, 0.635f, 0.290f) : new Color(0.863f, 0.149f, 0.149f);
+            accuracyLabel.text = triageCorrect ? "Correct triage ✓" : "Incorrect triage ✗";
+            accuracyLabel.color = triageCorrect ? new Color(0.086f, 0.635f, 0.290f) : new Color(0.863f, 0.149f, 0.149f);
         }
 
         if (accuracyIconBg != null)
-            accuracyIconBg.color = result.isCorrect
+            accuracyIconBg.color = triageCorrect
                 ? new Color(0.086f, 0.635f, 0.290f, 0.12f)
                 : new Color(0.863f, 0.149f, 0.149f, 0.12f);
 
@@ -114,7 +112,7 @@ public class FeedbackSceneController : MonoBehaviour
         if (speedValue != null)
         {
             speedValue.text = $"{result.speedScore}%";
-            speedValue.color = GetBorderColor(result.speedScore);
+            speedValue.color = GetScoreColor(result.speedScore);
         }
 
         bool isTimerExpired = result.timeTaken >= 180f || result.speedScore <= 0;
@@ -138,7 +136,23 @@ public class FeedbackSceneController : MonoBehaviour
         if (speedIconBg != null)
             speedIconBg.color = new Color(0.145f, 0.337f, 0.922f, 0.12f);
 
-        // ── DYNAMIC TIMEOUT CLIP ──
+        // ── Confidence Card ────────────────────────────────
+        if (confidenceValue != null)
+        {
+            confidenceValue.text = $"{result.confidenceScore}%";
+            confidenceValue.color = GetScoreColor(result.confidenceScore);
+        }
+
+        if (confidenceLabel != null)
+        {
+            confidenceLabel.text = "Self-reported confidence";
+            confidenceLabel.color = new Color(0.443f, 0.451f, 0.529f);
+        }
+
+        if (confidenceIconBg != null)
+            confidenceIconBg.color = new Color(0.086f, 0.635f, 0.290f, 0.12f);
+
+        // ── Triage Comparison Panel ────────────────────
         if (isTimerExpired && triageAssessmentContainer != null)
         {
             triageAssessmentContainer.SetActive(false);
@@ -154,7 +168,7 @@ public class FeedbackSceneController : MonoBehaviour
             {
                 yourSelectionPill.color = GetTriagePillColor(result.selectedCategory);
 
-                if (!result.isCorrect)
+                if (!triageCorrect)
                 {
                     Outline ol = yourSelectionPill.GetComponent<Outline>() ?? yourSelectionPill.gameObject.AddComponent<Outline>();
                     ol.effectColor = new Color(0.863f, 0.149f, 0.149f, 0.9f);
@@ -181,7 +195,7 @@ public class FeedbackSceneController : MonoBehaviour
             string explanation = ScoringSystem.LastScenario?.clinicalExplanation;
 
             if (string.IsNullOrEmpty(explanation))
-                explanation = result.isCorrect
+                explanation = triageCorrect
                     ? "Well done! Your triage decision aligned with the START protocol criteria."
                     : "Review the START triage algorithm. Complete the RPM sequence in order (Respiration → Perfusion → Mental Status) before assigning a triage tag.";
 
@@ -189,7 +203,7 @@ public class FeedbackSceneController : MonoBehaviour
             {
                 explanation = "Critical Care Delay: The allocation timeline window reached its limit before a definitive prioritization tag was assigned. Under mass-casualty parameters, speed is vital to save lives.";
             }
-            else if (!result.isCorrect)
+            else if (!triageCorrect)
             {
                 bool underTriage = result.selectedCategory > result.correctCategory;
                 string prefix = underTriage ? "⚠ Under-triage detected. " : "⚠ Over-triage detected. ";
@@ -232,12 +246,12 @@ public class FeedbackSceneController : MonoBehaviour
         if (scoreCircleFill != null) scoreCircleFill.color = solidPastelFillColor;
     }
 
-    Color GetBorderColor(int score)
+    // Color coding for scores (0-100)
+    Color GetScoreColor(int score)
     {
-        if (score >= 90) return new Color(0.086f, 0.635f, 0.290f);
-        if (score >= 80) return new Color(0.145f, 0.337f, 0.922f);
-        if (score >= 70) return new Color(0.75f, 0.40f, 0.01f);
-        return new Color(0.863f, 0.149f, 0.149f);
+        if (score >= 85) return new Color(0.086f, 0.635f, 0.290f);     // Green
+        if (score >= 70) return new Color(0.851f, 0.467f, 0.024f);     // Yellow/Orange
+        return new Color(0.863f, 0.149f, 0.149f);                       // Red
     }
 
     void WireButtons()
@@ -295,6 +309,10 @@ public class FeedbackSceneController : MonoBehaviour
         if (speedLabel != null) { speedLabel.text = "No Score..."; speedLabel.color = placeholderGray; }
         if (speedIconBg != null) speedIconBg.color = new Color(0.5f, 0.5f, 0.5f, 0.1f);
 
+        if (confidenceValue != null) { confidenceValue.text = "--%"; confidenceValue.color = placeholderGray; }
+        if (confidenceLabel != null) { confidenceLabel.text = "No Score..."; confidenceLabel.color = placeholderGray; }
+        if (confidenceIconBg != null) confidenceIconBg.color = new Color(0.5f, 0.5f, 0.5f, 0.1f);
+
         if (triageAssessmentContainer != null)
             triageAssessmentContainer.SetActive(false);
 
@@ -313,12 +331,12 @@ public class FeedbackSceneController : MonoBehaviour
         return "Needs Improvement";
     }
 
-    string GetPerformanceSubtitle(int score, bool isCorrect)
+    string GetPerformanceSubtitle(int score, bool triageCorrect)
     {
         if (score >= 90) return "Outstanding triage performance. You're ready for clinical duty.";
         if (score >= 80) return "Strong triage skills. Keep practicing to reach excellence.";
         if (score >= 70)
-            return isCorrect
+            return triageCorrect
                 ? "You made the correct decision but could improve your response speed."
                 : "Review the START protocol to strengthen your triage accuracy.";
         return "Review the START triage algorithm and retry the scenario.";

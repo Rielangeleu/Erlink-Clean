@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
 using Firebase.Firestore;
 using Firebase.Extensions;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class ResultsSceneController : MonoBehaviour
 {
@@ -28,32 +28,29 @@ public class ResultsSceneController : MonoBehaviour
 
     private FirebaseFirestore db;
     private string currentUserId;
-    private List<SessionData> sessions = new List<SessionData>();
+    private List<SessionData> allSessions = new List<SessionData>();
+    private List<SessionData> latestPerScenario = new List<SessionData>();
 
     void Start()
     {
         db = FirebaseFirestore.DefaultInstance;
 
-        // Setup buttons
         if (backButton != null)
             backButton.onClick.AddListener(() => SceneManager.LoadScene("DashboardScene"));
 
         if (newSimulationButton != null)
             newSimulationButton.onClick.AddListener(() => SceneManager.LoadScene("ScenarioSelectScene"));
 
-        // Wait for FirebaseManager to be ready
         StartCoroutine(WaitForFirebaseManager());
     }
 
     System.Collections.IEnumerator WaitForFirebaseManager()
     {
-        // Wait for FirebaseManager
         while (FirebaseManager.Instance == null || FirebaseManager.CurrentUser == null)
         {
             yield return new WaitForSeconds(0.5f);
         }
 
-        // Get current user's ID
         currentUserId = FirebaseManager.CurrentUser.UserId;
         Debug.Log($"Loading sessions for userId: {currentUserId}");
         LoadSessions();
@@ -64,11 +61,9 @@ public class ResultsSceneController : MonoBehaviour
         if (loadingPanel != null) loadingPanel.SetActive(true);
         if (emptyStatePanel != null) emptyStatePanel.SetActive(false);
 
-        // Query Firestore for sessions matching the current user's ID
         db.Collection("sessions")
             .WhereEqualTo("userId", currentUserId)
             .OrderByDescending("completedAt")
-            .Limit(50)
             .GetSnapshotAsync()
             .ContinueWithOnMainThread(task =>
             {
@@ -77,7 +72,7 @@ public class ResultsSceneController : MonoBehaviour
                 if (task.IsCompleted && !task.IsFaulted && task.Result != null)
                 {
                     QuerySnapshot snapshot = task.Result;
-                    Debug.Log($"Found {snapshot.Count} sessions for userId: {currentUserId}");
+                    Debug.Log($"Found {snapshot.Count} total sessions for userId: {currentUserId}");
 
                     if (snapshot.Count == 0)
                     {
@@ -85,7 +80,7 @@ public class ResultsSceneController : MonoBehaviour
                         return;
                     }
 
-                    sessions.Clear();
+                    allSessions.Clear();
 
                     foreach (DocumentSnapshot doc in snapshot.Documents)
                     {
@@ -100,10 +95,16 @@ public class ResultsSceneController : MonoBehaviour
                             isCorrect = doc.ContainsField("isCorrect") ? doc.GetValue<bool>("isCorrect") : false,
                             completedAt = doc.ContainsField("completedAt") ? doc.GetValue<Timestamp>("completedAt").ToDateTime() : System.DateTime.Now
                         };
-                        sessions.Add(session);
+                        allSessions.Add(session);
                     }
 
+                    // Calculate summary stats from ALL sessions
                     CalculateSummaryStats();
+
+                    // Get only the LATEST session for each scenario
+                    GetLatestPerScenario();
+
+                    // Display latest sessions
                     DisplaySessions();
                 }
                 else if (task.IsFaulted)
@@ -121,11 +122,11 @@ public class ResultsSceneController : MonoBehaviour
 
     void CalculateSummaryStats()
     {
-        int total = sessions.Count;
+        int total = allSessions.Count;
         float sum = 0;
         int best = 0;
 
-        foreach (var session in sessions)
+        foreach (var session in allSessions)
         {
             sum += session.finalScore;
             if (session.finalScore > best)
@@ -134,14 +135,45 @@ public class ResultsSceneController : MonoBehaviour
 
         int average = total > 0 ? Mathf.RoundToInt(sum / total) : 0;
 
+        // Update Total Sessions (no color needed)
         if (totalSessionsText != null)
             totalSessionsText.text = total.ToString();
 
+        // Update Average Score with COLOR CODING
         if (averageScoreText != null)
+        {
             averageScoreText.text = $"{average}%";
+            averageScoreText.color = GetScoreColor(average);
+        }
 
+        // Update Best Score with COLOR CODING
         if (bestScoreText != null)
+        {
             bestScoreText.text = $"{best}%";
+            bestScoreText.color = GetScoreColor(best);
+        }
+
+        Debug.Log($"Summary Stats - Total Sessions: {total}, Average: {average}%, Best: {best}%");
+    }
+
+    void GetLatestPerScenario()
+    {
+        latestPerScenario.Clear();
+
+        // Group by scenario title and take ONLY the most recent (first because ordered by date desc)
+        var grouped = allSessions
+            .GroupBy(s => s.scenarioTitle)
+            .Select(g => g.OrderByDescending(s => s.completedAt).First());
+
+        latestPerScenario = grouped.ToList();
+
+        Debug.Log($"Showing {latestPerScenario.Count} unique scenarios (latest attempt only)");
+
+        // Log each latest session for debugging
+        foreach (var session in latestPerScenario)
+        {
+            Debug.Log($"Latest {session.scenarioTitle}: {session.finalScore}% on {session.completedAt:MMM dd, yyyy}");
+        }
     }
 
     void DisplaySessions()
@@ -152,7 +184,7 @@ public class ResultsSceneController : MonoBehaviour
             return;
         }
 
-        // Clear existing cards (but keep StatsCard, LoadingPanel, EmptyStatePanel)
+        // Clear existing cards (keep StatsCard, LoadingPanel, EmptyStatePanel)
         foreach (Transform child in sessionsContainer)
         {
             if (child.gameObject.name != "StatsCard" &&
@@ -163,11 +195,13 @@ public class ResultsSceneController : MonoBehaviour
             }
         }
 
-        foreach (var session in sessions)
+        // Sort by most recent date
+        var sortedSessions = latestPerScenario.OrderByDescending(s => s.completedAt).ToList();
+
+        foreach (var session in sortedSessions)
         {
             GameObject card = Instantiate(sessionCardPrefab, sessionsContainer);
 
-            // Find all text components in the card
             TextMeshProUGUI[] texts = card.GetComponentsInChildren<TextMeshProUGUI>();
 
             foreach (var text in texts)
@@ -190,11 +224,13 @@ public class ResultsSceneController : MonoBehaviour
                         break;
                     case "AccuracyValue":
                         text.text = $"{session.accuracyScore}%";
+                        text.color = GetScoreColor(session.accuracyScore);
                         break;
                     case "TimeValue":
                         int mins = Mathf.FloorToInt(session.timeTaken / 60f);
                         int secs = Mathf.FloorToInt(session.timeTaken % 60f);
                         text.text = mins > 0 ? $"{mins}m {secs}s" : $"{secs}s";
+                        text.color = GetTimeColor(session.timeTaken);
                         break;
                     case "ResultValue":
                         text.text = session.isCorrect ? "✅ Correct" : "❌ Incorrect";
@@ -202,15 +238,23 @@ public class ResultsSceneController : MonoBehaviour
                         break;
                 }
             }
-
-            // Make card clickable to view details
-            Button btn = card.GetComponent<Button>();
-            if (btn == null)
-                btn = card.AddComponent<Button>();
-
-            SessionData captured = session;
-            btn.onClick.AddListener(() => ViewSessionDetails(captured));
         }
+    }
+
+    // Color coding for scores (0-100)
+    Color GetScoreColor(int score)
+    {
+        if (score >= 85) return new Color32(46, 204, 113, 255);     // Green - High/Excellent
+        if (score >= 70) return new Color32(241, 196, 15, 255);     // Yellow - Average/Satisfactory
+        return new Color32(231, 76, 60, 255);                       // Red - Low/Needs Improvement
+    }
+
+    // Color coding for time taken
+    Color GetTimeColor(float timeInSeconds)
+    {
+        if (timeInSeconds <= 60) return new Color32(46, 204, 113, 255);     // Green - Fast (≤60s)
+        if (timeInSeconds <= 120) return new Color32(241, 196, 15, 255);    // Yellow - Medium (61-120s)
+        return new Color32(231, 76, 60, 255);                                // Red - Slow (>120s)
     }
 
     string GetScenarioIcon(string title)
@@ -224,13 +268,6 @@ public class ResultsSceneController : MonoBehaviour
         return "🏥";
     }
 
-    Color GetScoreColor(int score)
-    {
-        if (score >= 90) return new Color32(46, 204, 113, 255);
-        if (score >= 70) return new Color32(241, 196, 15, 255);
-        return new Color32(231, 76, 60, 255);
-    }
-
     Color32 GetDifficultyColor(string difficulty)
     {
         if (string.IsNullOrEmpty(difficulty)) return new Color32(149, 165, 166, 255);
@@ -241,16 +278,6 @@ public class ResultsSceneController : MonoBehaviour
             case "hard": return new Color32(231, 76, 60, 255);
             default: return new Color32(149, 165, 166, 255);
         }
-    }
-
-    void ViewSessionDetails(SessionData session)
-    {
-        Debug.Log($"Viewing details for: {session.scenarioTitle} - Score: {session.finalScore}%");
-    }
-
-    public void RefreshResults()
-    {
-        LoadSessions();
     }
 
     public void LoadNewSimulation()

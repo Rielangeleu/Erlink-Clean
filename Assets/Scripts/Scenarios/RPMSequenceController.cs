@@ -29,19 +29,31 @@ public class RPMSequenceController : MonoBehaviour
     [Header("Dependencies")]
     public UIManager uiManager;
     public PatientInfoCardUI infoCardUI;
+    public ScoringSystem scoringSystem;
 
     // Internal state management tracking
     private ScenarioData _currentScenario;
-    private int _assessmentOrderIndex = 0; // 0 = Waiting for R, 1 = Waiting for P, 2 = Waiting for M, 3 = All Pills Shown
-    private int _quizStepIndex = 0;        // Controls the subsequent quiz panel question progression loop
+    private int _assessmentOrderIndex = 0;
+    private int _quizStepIndex = 0;
     private int[] _selectedAnswers = new int[3];
+    private int[] _correctAnswers = new int[3];
+    private int _correctCount = 0;
 
     // Events
     public Action OnRPMComplete;
 
-    private string[] _stepIcons = { "STEP 1 OF 3 — RESPIRATION ASSESSMENT",
-                                     "STEP 2 OF 3 — PERFUSION ASSESSMENT",
-                                     "STEP 3 OF 3 — MENTAL STATUS ASSESSMENT" };
+    private string[] _stepIcons = {
+        "STEP 1 OF 3 — RESPIRATION ASSESSMENT",
+        "STEP 2 OF 3 — PERFUSION ASSESSMENT",
+        "STEP 3 OF 3 — MENTAL STATUS ASSESSMENT"
+    };
+
+    void Start()
+    {
+        // Find scoring system if not assigned
+        if (scoringSystem == null)
+            scoringSystem = FindFirstObjectByType<ScoringSystem>();
+    }
 
     public void StartRPMAssessment(ScenarioData scenario)
     {
@@ -49,6 +61,13 @@ public class RPMSequenceController : MonoBehaviour
         _assessmentOrderIndex = 0;
         _quizStepIndex = 0;
         _selectedAnswers = new int[3];
+        _correctCount = 0;
+
+        // Store correct answers for later comparison
+        RPMAssessment rpm = scenario.rpmAssessment;
+        _correctAnswers[0] = rpm.correctRespirationIndex;
+        _correctAnswers[1] = rpm.correctPerfusionIndex;
+        _correctAnswers[2] = rpm.correctMentalStatusIndex;
 
         // Enforce total interface isolation at startup
         if (rpmPanel != null) rpmPanel.SetActive(false);
@@ -87,7 +106,7 @@ public class RPMSequenceController : MonoBehaviour
         }
         else
         {
-            TriggerSequenceErrorAlert("Incorrect Sequence!");
+            TriggerSequenceErrorAlert("Incorrect Sequence! Please complete Respiration assessment first.");
         }
     }
 
@@ -114,7 +133,7 @@ public class RPMSequenceController : MonoBehaviour
         }
         else
         {
-            TriggerSequenceErrorAlert("Incorrect Sequence!");
+            TriggerSequenceErrorAlert("Incorrect Sequence! Please complete Respiration before Perfusion.");
         }
     }
 
@@ -141,7 +160,7 @@ public class RPMSequenceController : MonoBehaviour
         }
         else
         {
-            TriggerSequenceErrorAlert("Incorrect Sequence!");
+            TriggerSequenceErrorAlert("Incorrect Sequence! Please complete Respiration and Perfusion first.");
         }
     }
 
@@ -211,7 +230,6 @@ public class RPMSequenceController : MonoBehaviour
                 optionButtons[i].gameObject.SetActive(true);
                 optionButtonTexts[i].text = options[i];
                 optionButtons[i].interactable = true;
-
                 optionButtons[i].GetComponent<Image>().color = Color.white;
                 optionButtonTexts[i].color = new Color(0.12f, 0.16f, 0.24f);
             }
@@ -228,28 +246,29 @@ public class RPMSequenceController : MonoBehaviour
     public void OnOptionSelected(int selectedIndex)
     {
         _selectedAnswers[_quizStepIndex] = selectedIndex;
-        RPMAssessment rpm = _currentScenario.rpmAssessment;
 
-        int correctIndex = 0;
+        // Check if answer is correct
+        bool isCorrect = selectedIndex == _correctAnswers[_quizStepIndex];
+        if (isCorrect)
+        {
+            _correctCount++;
+        }
+
+        RPMAssessment rpm = _currentScenario.rpmAssessment;
         string feedback = "";
 
         switch (_quizStepIndex)
         {
             case 0:
-                correctIndex = rpm.correctRespirationIndex;
                 feedback = rpm.respirationFeedback;
                 break;
             case 1:
-                correctIndex = rpm.correctPerfusionIndex;
                 feedback = rpm.perfusionFeedback;
                 break;
             case 2:
-                correctIndex = rpm.correctMentalStatusIndex;
                 feedback = rpm.mentalStatusFeedback;
                 break;
         }
-
-        bool isCorrect = selectedIndex == correctIndex;
 
         Color selectedColor = isCorrect ?
             new Color(0.086f, 0.635f, 0.29f) :
@@ -289,12 +308,24 @@ public class RPMSequenceController : MonoBehaviour
 
     void CompleteRPM()
     {
+        // CRITICAL FIX: Send RPM results to ScoringSystem
+        if (scoringSystem != null)
+        {
+            scoringSystem.RecordRPMAssessment(_correctCount);
+            Debug.Log($"=== RPM COMPLETE: {_correctCount}/3 correct answers added to accuracy ===");
+        }
+        else
+        {
+            Debug.LogError("ScoringSystem is NULL! RPM points not recorded!");
+        }
+
         if (rpmPanel != null) rpmPanel.SetActive(false);
         if (uiManager != null) uiManager.SetTriageButtonsInteractable(true);
 
         OnRPMComplete?.Invoke();
-        Debug.Log("All 3 sequential verification steps completed. Tags unlocked.");
+        Debug.Log($"RPM Assessment Complete! {_correctCount}/3 quiz answers correct. Triage tags unlocked.");
     }
 
     public int[] GetSelectedAnswers() => _selectedAnswers;
+    public int GetCorrectCount() => _correctCount;
 }
