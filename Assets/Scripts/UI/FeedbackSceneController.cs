@@ -2,11 +2,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-using DG.Tweening;
 
 /// <summary>
 /// Feedback Scene — ALL values driven by actual performance.
-/// Handles stable entrance animations and explicit gray fallback styles for empty states.
+/// No animations - static display only.
 /// </summary>
 public class FeedbackSceneController : MonoBehaviour
 {
@@ -41,23 +40,10 @@ public class FeedbackSceneController : MonoBehaviour
     public Button nextScenarioButton;
     public Button dashboardButton;
 
-    // Fixed Animation Reference Tracking Variables
-    private Vector2 _originalTitlePosition;
-    private bool _hasCapturedTitlePosition = false;
-
     void Start()
     {
-        // Cache our exact initial anchored text coordinates before any animation math modifies them
-        if (performanceTitle != null)
-        {
-            RectTransform rt = performanceTitle.GetComponent<RectTransform>();
-            _originalTitlePosition = rt.anchoredPosition;
-            _hasCapturedTitlePosition = true;
-        }
-
         ScoringResult result = ScoringSystem.LastResult;
 
-        // FIXED: Check for fallback placeholders if result properties are missing or empty
         if (result == null || result.timeTaken == 0)
         {
             ShowPlaceholder();
@@ -66,7 +52,6 @@ public class FeedbackSceneController : MonoBehaviour
         }
 
         PopulateResults(result);
-        AnimateEntrance(result);
         WireButtons();
         SaveResultToFirebase(result);
     }
@@ -90,12 +75,12 @@ public class FeedbackSceneController : MonoBehaviour
         string title = GetPerformanceTitle(result.finalScore);
         string subtitle = GetPerformanceSubtitle(result.finalScore, result.isCorrect);
 
-        // TWO-TONE RADIAL SCORE CIRCLE SYSTEM 
+        // Set colors and values
         ApplyScoreCircleColors(result.finalScore);
 
         if (scoreText != null)
         {
-            scoreText.text = "0%";
+            scoreText.text = $"{result.finalScore}%";
         }
 
         if (performanceTitle != null)
@@ -145,7 +130,7 @@ public class FeedbackSceneController : MonoBehaviour
             {
                 int mins = Mathf.FloorToInt(result.timeTaken / 60f);
                 int secs = Mathf.FloorToInt(result.timeTaken % 60f);
-                speedLabel.text = mins > 0 ? $" {mins}m {secs}s" : $" {secs} seconds";
+                speedLabel.text = mins > 0 ? $"{mins}m {secs}s" : $"{secs} seconds";
                 speedLabel.color = new Color(0.443f, 0.451f, 0.529f);
             }
         }
@@ -190,7 +175,7 @@ public class FeedbackSceneController : MonoBehaviour
                 correctTriagePillText.color = GetTriagePillTextColor(result.correctCategory);
         }
 
-        // ── Explanation Autofit Text Injection ─────────
+        // ── Explanation ─────────
         if (explanationText != null)
         {
             string explanation = ScoringSystem.LastScenario?.clinicalExplanation;
@@ -255,41 +240,6 @@ public class FeedbackSceneController : MonoBehaviour
         return new Color(0.863f, 0.149f, 0.149f);
     }
 
-    void AnimateEntrance(ScoringResult result)
-    {
-        if (scoreText != null)
-        {
-            int target = result.finalScore;
-            DOTween.To(() => 0, x => scoreText.text = $"{x}%", target, 1.2f)
-                .SetEase(Ease.OutCubic)
-                .SetDelay(0.3f);
-        }
-
-        if (scoreCircleFill != null)
-        {
-            Transform parent = scoreCircleFill.transform.parent;
-            if (parent != null)
-            {
-                parent.localScale = Vector3.zero;
-                parent.DOScale(1f, 0.5f).SetEase(Ease.OutBack).SetDelay(0.1f);
-            }
-        }
-
-        // FIXED SLIDE TEXT: Always animate directly to cached target properties
-        if (performanceTitle != null && _hasCapturedTitlePosition)
-        {
-            CanvasGroup cg = performanceTitle.GetComponent<CanvasGroup>() ?? performanceTitle.gameObject.AddComponent<CanvasGroup>();
-            cg.DOKill();
-            cg.alpha = 0f;
-            cg.DOFade(1f, 0.4f).SetDelay(0.6f);
-
-            RectTransform rt = performanceTitle.GetComponent<RectTransform>();
-            rt.DOKill();
-            rt.anchoredPosition = _originalTitlePosition + new Vector2(0, -15);
-            rt.DOAnchorPosY(_originalTitlePosition.y, 0.4f).SetDelay(0.6f).SetEase(Ease.OutCubic);
-        }
-    }
-
     void WireButtons()
     {
         if (nextScenarioButton != null)
@@ -311,10 +261,9 @@ public class FeedbackSceneController : MonoBehaviour
             });
     }
 
-    // FIXED: Formats the entire overlay framework to gray fallback styles for empty placeholder states
     void ShowPlaceholder()
     {
-        Color placeholderGray = new Color(0.443f, 0.451f, 0.529f); // #71718A Clean slate gray color look
+        Color placeholderGray = new Color(0.443f, 0.451f, 0.529f);
         Color lightGrayBackground = new Color(0.94f, 0.94f, 0.95f);
 
         if (scoreText != null)
@@ -338,7 +287,6 @@ public class FeedbackSceneController : MonoBehaviour
             performanceSubtitle.color = placeholderGray;
         }
 
-        // Set card labels to clean, empty default placeholders
         if (accuracyValue != null) { accuracyValue.text = "--%"; accuracyValue.color = placeholderGray; }
         if (accuracyLabel != null) { accuracyLabel.text = "No Score..."; accuracyLabel.color = placeholderGray; }
         if (accuracyIconBg != null) accuracyIconBg.color = new Color(0.5f, 0.5f, 0.5f, 0.1f);
@@ -347,7 +295,6 @@ public class FeedbackSceneController : MonoBehaviour
         if (speedLabel != null) { speedLabel.text = "No Score..."; speedLabel.color = placeholderGray; }
         if (speedIconBg != null) speedIconBg.color = new Color(0.5f, 0.5f, 0.5f, 0.1f);
 
-        // Hide structural selection pill sub-elements safely
         if (triageAssessmentContainer != null)
             triageAssessmentContainer.SetActive(false);
 
