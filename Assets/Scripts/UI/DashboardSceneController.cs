@@ -152,9 +152,10 @@ public class DashboardSceneController : MonoBehaviour
             if (speeds.Count > 0 && speedValue != null)
             {
                 float avgSpeed = (float)speeds.Average();
-                speedValue.text = avgSpeed < 60
-                    ? $"{avgSpeed:F0}s"
-                    : $"{avgSpeed / 60:F0}m {avgSpeed % 60:F0}s";
+                if (avgSpeed < 60)
+                    speedValue.text = $"{avgSpeed:F0}s";
+                else
+                    speedValue.text = $"{(int)(avgSpeed / 60)}m {(int)(avgSpeed % 60)}s";
 
                 if (speedSub != null)
                     speedSub.text = $"Avg response time";
@@ -192,7 +193,7 @@ public class DashboardSceneController : MonoBehaviour
     {
         if (activityList == null)
         {
-            Debug.LogError("activityList is not assigned!");
+            Debug.LogError("activityList is not assigned in Inspector!");
             return;
         }
 
@@ -214,108 +215,221 @@ public class DashboardSceneController : MonoBehaviour
 
         Debug.Log($"Creating {docs.Count} recent activity items");
 
-        // Create activity items
-        foreach (DocumentSnapshot doc in docs)
-        {
-            CreateActivityItem(doc);
-        }
-    }
-
-    void CreateActivityItem(DocumentSnapshot doc)
-    {
-        // Get scenario title
-        string scenarioTitle = doc.ContainsField("scenarioTitle")
-            ? doc.GetValue<string>("scenarioTitle") : "Simulation";
-
-        // Get score
-        int score = doc.ContainsField("finalScore")
-            ? doc.GetValue<int>("finalScore") : 0;
-
-        // Get correctness
-        bool isCorrect = doc.ContainsField("isCorrect")
-            ? doc.GetValue<bool>("isCorrect") : false;
-
-        // Get date
-        string dateStr = "Just now";
-        if (doc.ContainsField("completedAt"))
-        {
-            Timestamp timestamp = doc.GetValue<Timestamp>("completedAt");
-            System.DateTime date = timestamp.ToDateTime();
-            dateStr = date.ToString("MMM dd, yyyy");
-        }
-
-        Debug.Log($"Creating activity item: {scenarioTitle} - {score}% - {dateStr}");
-
+        // Check if prefab is assigned
         if (activityItemPrefab != null)
         {
-            GameObject item = Instantiate(activityItemPrefab, activityList);
-            TextMeshProUGUI[] texts = item.GetComponentsInChildren<TextMeshProUGUI>();
-
-            if (texts.Length >= 2)
+            Debug.Log("Using prefab to create activity items");
+            foreach (DocumentSnapshot doc in docs)
             {
-                texts[0].text = scenarioTitle;
-                texts[1].text = $"Score: {score}%";
-                texts[1].color = GetScoreColor(score);
-
-                if (texts.Length >= 3)
-                    texts[2].text = dateStr;
-                if (texts.Length >= 4)
-                    texts[3].text = isCorrect ? "✓ Correct" : "✗ Incorrect";
+                CreateActivityItemWithPrefab(doc);
             }
         }
         else
         {
-            // Create item dynamically if no prefab
-            CreateActivityItemDynamic(scenarioTitle, score, dateStr, isCorrect);
+            Debug.LogWarning("No activityItemPrefab assigned, using dynamic creation");
+            foreach (DocumentSnapshot doc in docs)
+            {
+                CreateActivityItemDynamic(doc);
+            }
         }
     }
 
-    void CreateActivityItemDynamic(string scenarioTitle, int score, string dateStr, bool isCorrect)
+    void CreateActivityItemWithPrefab(DocumentSnapshot doc)
     {
+        if (activityItemPrefab == null || activityList == null) return;
+
+        // Get data from document
+        string scenarioTitle = doc.ContainsField("scenarioTitle")
+            ? doc.GetValue<string>("scenarioTitle") : "Simulation";
+
+        int score = doc.ContainsField("finalScore")
+            ? doc.GetValue<int>("finalScore") : 0;
+
+        bool isCorrect = doc.ContainsField("isCorrect")
+            ? doc.GetValue<bool>("isCorrect") : false;
+
+        string dateStr = GetDateString(doc);
+
+        Debug.Log($"Creating prefab item: {scenarioTitle} - {score}%");
+
+        // Instantiate the prefab
+        GameObject item = Instantiate(activityItemPrefab, activityList);
+
+        // Try to find TextMeshProUGUI components in the prefab
+        TextMeshProUGUI[] texts = item.GetComponentsInChildren<TextMeshProUGUI>();
+
+        if (texts.Length >= 2)
+        {
+            // Assuming order: Title, Score, Date, Status
+            texts[0].text = scenarioTitle;
+            texts[1].text = $"{score}%";
+            texts[1].color = GetScoreColor(score);
+
+            if (texts.Length >= 3)
+                texts[2].text = dateStr;
+            if (texts.Length >= 4)
+                texts[3].text = isCorrect ? "✓ Correct" : "✗ Incorrect";
+        }
+        else
+        {
+            Debug.LogWarning($"Prefab has only {texts.Length} TextMeshPro components, expected at least 2");
+            // Try to find by name instead
+            TryAssignTextsByName(item, scenarioTitle, score, dateStr, isCorrect);
+        }
+    }
+
+    void TryAssignTextsByName(GameObject item, string title, int score, string dateStr, bool isCorrect)
+    {
+        // Try to find specific named Text components
+        TextMeshProUGUI titleText = FindTextInChildren(item, "Title");
+        TextMeshProUGUI scoreText = FindTextInChildren(item, "Score");
+        TextMeshProUGUI dateText = FindTextInChildren(item, "Date");
+        TextMeshProUGUI statusText = FindTextInChildren(item, "Status");
+
+        if (titleText != null) titleText.text = title;
+        if (scoreText != null)
+        {
+            scoreText.text = $"{score}%";
+            scoreText.color = GetScoreColor(score);
+        }
+        if (dateText != null) dateText.text = dateStr;
+        if (statusText != null) statusText.text = isCorrect ? "✓ Correct" : "✗ Incorrect";
+    }
+
+    TextMeshProUGUI FindTextInChildren(GameObject parent, string name)
+    {
+        foreach (Transform child in parent.transform.GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name == name)
+            {
+                return child.GetComponent<TextMeshProUGUI>();
+            }
+        }
+        return null;
+    }
+
+    void CreateActivityItemDynamic(DocumentSnapshot doc)
+    {
+        // Get data from document
+        string scenarioTitle = doc.ContainsField("scenarioTitle")
+            ? doc.GetValue<string>("scenarioTitle") : "Simulation";
+
+        int score = doc.ContainsField("finalScore")
+            ? doc.GetValue<int>("finalScore") : 0;
+
+        bool isCorrect = doc.ContainsField("isCorrect")
+            ? doc.GetValue<bool>("isCorrect") : false;
+
+        string dateStr = GetDateString(doc);
+
+        Debug.Log($"Creating dynamic item: {scenarioTitle} - {score}%");
+
+        // Create main container
         GameObject item = new GameObject("ActivityItem");
         item.transform.SetParent(activityList, false);
 
-        RectTransform rt = item.AddComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(0, 80);
+        // Add Layout Element for proper sizing
+        LayoutElement layoutElement = item.AddComponent<LayoutElement>();
+        layoutElement.minHeight = 80;
+        layoutElement.flexibleWidth = 1;
 
+        // Add background image
         Image bg = item.AddComponent<Image>();
-        bg.color = new Color(0.973f, 0.980f, 0.988f);
+        bg.color = new Color(0.95f, 0.97f, 0.98f); // Light blue-gray
 
-        LayoutElement le = item.AddComponent<LayoutElement>();
-        le.minHeight = 80;
+        // Add outline
+        Outline outline = item.AddComponent<Outline>();
+        outline.effectColor = new Color(0.8f, 0.8f, 0.9f);
+        outline.effectDistance = new Vector2(1, 1);
 
-        // Title
+        // Create title text
         GameObject titleGO = new GameObject("Title");
         titleGO.transform.SetParent(item.transform, false);
         TextMeshProUGUI title = titleGO.AddComponent<TextMeshProUGUI>();
-        title.text = $"{scenarioTitle} — {score}%";
-        title.fontSize = 24;
-        title.color = GetScoreColor(score);
+        title.text = scenarioTitle;
+        title.fontSize = 18;
         title.fontStyle = FontStyles.Bold;
+        title.color = new Color(0.2f, 0.2f, 0.3f);
 
         RectTransform titleRt = titleGO.GetComponent<RectTransform>();
         titleRt.anchorMin = new Vector2(0, 0.5f);
-        titleRt.anchorMax = new Vector2(1, 0.5f);
-        titleRt.offsetMin = new Vector2(16, 0);
-        titleRt.offsetMax = new Vector2(-16, 0);
-        titleRt.sizeDelta = new Vector2(0, 30);
+        titleRt.anchorMax = new Vector2(0.6f, 0.5f);
+        titleRt.offsetMin = new Vector2(16, -15);
+        titleRt.offsetMax = new Vector2(-10, 15);
 
-        // Date
-        if (!string.IsNullOrEmpty(dateStr))
+        // Create score text
+        GameObject scoreGO = new GameObject("Score");
+        scoreGO.transform.SetParent(item.transform, false);
+        TextMeshProUGUI scoreText = scoreGO.AddComponent<TextMeshProUGUI>();
+        scoreText.text = $"{score}%";
+        scoreText.fontSize = 20;
+        scoreText.fontStyle = FontStyles.Bold;
+        scoreText.alignment = TextAlignmentOptions.MidlineRight;
+        scoreText.color = GetScoreColor(score);
+
+        RectTransform scoreRt = scoreGO.GetComponent<RectTransform>();
+        scoreRt.anchorMin = new Vector2(0.6f, 0.5f);
+        scoreRt.anchorMax = new Vector2(0.85f, 0.5f);
+        scoreRt.offsetMin = new Vector2(0, -15);
+        scoreRt.offsetMax = new Vector2(-10, 15);
+
+        // Create date text
+        GameObject dateGO = new GameObject("Date");
+        dateGO.transform.SetParent(item.transform, false);
+        TextMeshProUGUI dateText = dateGO.AddComponent<TextMeshProUGUI>();
+        dateText.text = dateStr;
+        dateText.fontSize = 12;
+        dateText.color = new Color(0.6f, 0.6f, 0.7f);
+        dateText.alignment = TextAlignmentOptions.BottomLeft;
+
+        RectTransform dateRt = dateGO.GetComponent<RectTransform>();
+        dateRt.anchorMin = new Vector2(0, 0);
+        dateRt.anchorMax = new Vector2(0.5f, 0);
+        dateRt.offsetMin = new Vector2(16, 8);
+        dateRt.offsetMax = new Vector2(-10, 28);
+
+        // Create status text
+        GameObject statusGO = new GameObject("Status");
+        statusGO.transform.SetParent(item.transform, false);
+        TextMeshProUGUI statusText = statusGO.AddComponent<TextMeshProUGUI>();
+        statusText.text = isCorrect ? "✓ Correct" : "✗ Incorrect";
+        statusText.fontSize = 12;
+        statusText.alignment = TextAlignmentOptions.BottomRight;
+        statusText.color = isCorrect ? new Color(0.086f, 0.635f, 0.290f) : new Color(0.863f, 0.149f, 0.149f);
+
+        RectTransform statusRt = statusGO.GetComponent<RectTransform>();
+        statusRt.anchorMin = new Vector2(0.85f, 0);
+        statusRt.anchorMax = new Vector2(1, 0);
+        statusRt.offsetMin = new Vector2(0, 8);
+        statusRt.offsetMax = new Vector2(-16, 28);
+    }
+
+    string GetDateString(DocumentSnapshot doc)
+    {
+        if (doc.ContainsField("completedAt"))
         {
-            GameObject dateGO = new GameObject("Date");
-            dateGO.transform.SetParent(item.transform, false);
-            TextMeshProUGUI dateText = dateGO.AddComponent<TextMeshProUGUI>();
-            dateText.text = dateStr;
-            dateText.fontSize = 14;
-            dateText.color = new Color(0.6f, 0.6f, 0.6f);
+            try
+            {
+                Timestamp timestamp = doc.GetValue<Timestamp>("completedAt");
+                System.DateTime date = timestamp.ToDateTime();
 
-            RectTransform dateRt = dateGO.GetComponent<RectTransform>();
-            dateRt.anchorMin = new Vector2(0, 0);
-            dateRt.anchorMax = new Vector2(1, 0);
-            dateRt.offsetMin = new Vector2(16, 10);
-            dateRt.offsetMax = new Vector2(-16, 30);
+                // Show relative time for recent dates
+                System.TimeSpan diff = System.DateTime.Now - date;
+                if (diff.TotalHours < 1)
+                    return "Just now";
+                if (diff.TotalDays < 1)
+                    return $"{diff.Hours}h ago";
+                if (diff.TotalDays < 7)
+                    return $"{diff.Days}d ago";
+
+                return date.ToString("MMM dd, yyyy");
+            }
+            catch
+            {
+                return "Recently";
+            }
         }
+        return "Recently";
     }
 
     void ShowEmptyStats()
@@ -346,11 +460,13 @@ public class DashboardSceneController : MonoBehaviour
 
     string GetConfidenceLabel(int score)
     {
-        return score switch
+        // Convert 0-100 score to 1-5 scale
+        int level = Mathf.RoundToInt(score / 20f);
+        return level switch
         {
-            5 => "Excellent",
-            4 => "Good",
-            3 => "Average",
+            5 => "Very High",
+            4 => "High",
+            3 => "Medium",
             2 => "Low",
             _ => "Very Low"
         };

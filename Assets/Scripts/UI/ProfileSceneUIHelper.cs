@@ -33,7 +33,7 @@ public class ProfileSceneUIHelper : MonoBehaviour
             "juandelacruz@mymail.mapua.edu.ph",
             "2022104859",
             "Mapúa University",
-            "Student Intern"
+            "Student"
         );
     }
 

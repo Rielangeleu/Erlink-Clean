@@ -262,7 +262,7 @@ public class FeedbackSceneController : MonoBehaviour
                 ScenarioSelector.Reset();
                 ScoringSystem.LastResult = null;
                 ScoringSystem.LastScenario = null;
-                SceneManager.LoadScene("MainAR");
+                SceneManager.LoadScene("ScenarioSelectScene");
             });
 
         if (dashboardButton != null)

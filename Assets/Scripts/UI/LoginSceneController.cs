@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using DG.Tweening;
 using System.Threading.Tasks;
+using System.Collections;
 
 public enum UserRole
 {
@@ -25,20 +26,21 @@ public class LoginSceneController : MonoBehaviour
     [Header("3-Way Role Toggles")]
     public Button studentToggle;
     public Button instructorToggle;
-    public Button adminToggle; // Drag your brand new Admin option button here in the Inspector!
+    public Button adminToggle;
 
     [Space(5)]
     public Image studentToggleBg;
     public Image instructorToggleBg;
-    public Image adminToggleBg; // Drag your Admin button's background Image component here!
+    public Image adminToggleBg;
 
     [Space(5)]
     public TextMeshProUGUI studentToggleText;
     public TextMeshProUGUI instructorToggleText;
-    public TextMeshProUGUI adminToggleText; // Drag your Admin button's Text component here!
+    public TextMeshProUGUI adminToggleText;
 
     [Header("Buttons")]
     public Button loginButton;
+    public Button registerButton;
 
     [Header("Feedback")]
     public GameObject errorMessage;
@@ -46,20 +48,18 @@ public class LoginSceneController : MonoBehaviour
     public GameObject loadingOverlay;
 
     [Header("Colors")]
-    public Color activeToggleColor = new Color(0.145f, 0.337f, 0.922f); // #2563EB Active Vibrant Blue
-    public Color inactiveToggleColor = new Color(0.953f, 0.953f, 0.961f); // #F1F1F3 Clean Off-White Muted Grey
+    public Color activeToggleColor = new Color(0.145f, 0.337f, 0.922f);
+    public Color inactiveToggleColor = new Color(0.953f, 0.953f, 0.961f);
     public Color activeTextColor = Color.white;
-    public Color inactiveTextColor = new Color(0.216f, 0.255f, 0.318f); // Dark slate charcoal gray look
+    public Color inactiveTextColor = new Color(0.216f, 0.255f, 0.318f);
 
     private UserRole _selectedRole = UserRole.Student;
     private bool _isLoading = false;
 
     void Start()
     {
-        // Animate entrance
         AnimateEntrance();
 
-        // Wire 3-way selection buttons with explicit lambda listeners
         if (studentToggle != null)
             studentToggle.onClick.AddListener(() => SelectRole(UserRole.Student));
 
@@ -69,22 +69,19 @@ public class LoginSceneController : MonoBehaviour
         if (adminToggle != null)
             adminToggle.onClick.AddListener(() => SelectRole(UserRole.Admin));
 
-        // Wire login button
         if (loginButton != null)
             loginButton.onClick.AddListener(OnLoginClicked);
 
-        // Set default role state on initialization frame zero
-        SelectRole(UserRole.Student);
+        if (registerButton != null)
+            registerButton.onClick.AddListener(() => SceneManager.LoadScene("RegisterScene"));
 
-        // Listen for Firebase events
+        SelectRole(UserRole.Student);
         FirebaseManager.OnLoginSuccess += OnLoginSuccess;
         FirebaseManager.OnLoginFailed += OnLoginFailed;
 
-        // Hide overlays
         if (errorMessage != null) errorMessage.SetActive(false);
         if (loadingOverlay != null) loadingOverlay.SetActive(false);
 
-        // Check if already logged in
         if (FirebaseManager.CurrentUser != null && FirebaseManager.CurrentProfile != null)
         {
             RouteToScene(FirebaseManager.CurrentProfile.role);
@@ -93,7 +90,6 @@ public class LoginSceneController : MonoBehaviour
 
     void AnimateEntrance()
     {
-        // Fade in cleanly via Canvas Group alpha interpolation matrix checks
         CanvasGroup cg = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
         cg.alpha = 0f;
         cg.DOFade(1f, 0.5f).SetEase(Ease.OutCubic);
@@ -103,12 +99,15 @@ public class LoginSceneController : MonoBehaviour
     {
         _selectedRole = role;
 
-        // 1. Process Structural Visual Component Refreshes Across All Three Buttons
+        if (registerButton != null)
+        {
+            registerButton.gameObject.SetActive(_selectedRole == UserRole.Student);
+        }
+
         UpdateToggleVisuals(studentToggleBg, studentToggleText, _selectedRole == UserRole.Student);
         UpdateToggleVisuals(instructorToggleBg, instructorToggleText, _selectedRole == UserRole.Instructor);
         UpdateToggleVisuals(adminToggleBg, adminToggleText, _selectedRole == UserRole.Admin);
 
-        // 2. Punch Scale Feedback for the user click target
         Button activeTargetButton = _selectedRole switch
         {
             UserRole.Student => studentToggle,
@@ -134,7 +133,6 @@ public class LoginSceneController : MonoBehaviour
     {
         if (_isLoading) return;
 
-        // Validate inputs
         string email = emailField.text.Trim();
         string password = passwordField.text;
 
@@ -152,47 +150,79 @@ public class LoginSceneController : MonoBehaviour
             return;
         }
 
-        if (!email.Contains("@"))
-        {
-            ShowError("Please enter a valid email address.");
-            ShakeField(emailField);
-            return;
-        }
-
-        // Show loading
         SetLoading(true);
         HideError();
 
-        // Attempt Firebase login
-        bool success = await FirebaseManager.Instance.LoginAsync(email, password);
+        Debug.Log($"Attempting login for: {email}");
 
-        if (!success)
+        try
+        {
+            bool success = await FirebaseManager.Instance.LoginAsync(email, password);
+
+            if (!success)
+            {
+                Debug.Log("Login failed, waiting for error callback");
+                // Don't set loading false here - OnLoginFailed will do it
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Login exception: {e.Message}");
             SetLoading(false);
+            ShowError("An unexpected error occurred. Please try again.");
+        }
     }
 
     void OnLoginSuccess(UserProfile profile)
     {
+        Debug.Log($"Login success for: {profile.email}, role: {profile.role}");
         SetLoading(false);
-        Debug.Log($"Welcome {profile.displayName} ({profile.role})");
         RouteToScene(profile.role);
     }
 
     void OnLoginFailed(string error)
     {
+        Debug.Log($"Login failed with error: {error}");
         SetLoading(false);
+
+        // Clear any previous error and show new one
+        if (errorMessage != null)
+        {
+            errorMessage.SetActive(false);
+        }
+
         ShowError(error);
 
-        // Shake login button
+        // Shake the login button
         if (loginButton != null)
         {
             loginButton.GetComponent<RectTransform>()
                 .DOShakePosition(0.4f, 8f, 20);
         }
+
+        // Shake the password field on failure
+        ShakeField(passwordField);
+
+        // Clear password field for security (optional - you can comment this out)
+        // passwordField.text = "";
+
+        // Highlight the password field in red briefly
+        if (passwordField != null)
+        {
+            Image passwordBg = passwordField.GetComponent<Image>();
+            if (passwordBg != null)
+            {
+                Color originalColor = passwordBg.color;
+                passwordBg.DOColor(new Color(1f, 0.8f, 0.8f), 0.1f).OnComplete(() =>
+                {
+                    passwordBg.DOColor(originalColor, 0.5f);
+                });
+            }
+        }
     }
 
     void RouteToScene(string role)
     {
-        // Enforces string conversions back down safely from your database profiles string keys
         switch (role.ToLower().Trim())
         {
             case "student":
@@ -214,26 +244,51 @@ public class LoginSceneController : MonoBehaviour
     void SetLoading(bool loading)
     {
         _isLoading = loading;
-        if (loadingOverlay != null)
-            loadingOverlay.SetActive(loading);
-        if (loginButton != null)
-            loginButton.interactable = !loading;
+        if (loadingOverlay != null) loadingOverlay.SetActive(loading);
+        if (loginButton != null) loginButton.interactable = !loading;
+        if (registerButton != null && _selectedRole == UserRole.Student) registerButton.interactable = !loading;
     }
 
     void ShowError(string message)
     {
-        if (errorMessage == null) return;
-        errorMessage.SetActive(true);
-        if (errorText != null)
-            errorText.text = message;
+        if (errorMessage == null)
+        {
+            Debug.LogWarning($"Error message would show: {message}");
+            return;
+        }
 
-        errorMessage.GetComponent<RectTransform>()
-            .DOPunchScale(new Vector3(0.02f, 0.02f, 0), 0.3f, 3, 0.5f);
+        Debug.Log($"Showing error: {message}");
+
+        // Make sure the error panel is active
+        errorMessage.SetActive(true);
+
+        // Set the error text
+        if (errorText != null)
+        {
+            errorText.text = message;
+        }
+
+        // Animate the error
+        RectTransform errorRect = errorMessage.GetComponent<RectTransform>();
+        if (errorRect != null)
+        {
+            errorRect.localScale = Vector3.one;
+            errorRect.DOPunchScale(new Vector3(0.05f, 0.05f, 0), 0.3f, 3, 0.5f);
+        }
+
+        // Auto-hide error after 4 seconds
+        if (hideErrorCoroutine != null)
+            StopCoroutine(hideErrorCoroutine);
+        hideErrorCoroutine = StartCoroutine(HideErrorAfterDelay(4f));
     }
 
-    void ShowErrorTextDirectly(string text)
+    private Coroutine hideErrorCoroutine;
+
+    IEnumerator HideErrorAfterDelay(float delay)
     {
-        ShowError(text);
+        yield return new WaitForSeconds(delay);
+        if (errorMessage != null)
+            errorMessage.SetActive(false);
     }
 
     void HideError()
@@ -246,8 +301,11 @@ public class LoginSceneController : MonoBehaviour
     {
         if (field != null)
         {
-            field.GetComponent<RectTransform>()
-                .DOShakePosition(0.3f, 6f, 15);
+            RectTransform rect = field.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.DOShakePosition(0.3f, 6f, 15);
+            }
         }
     }
 
@@ -255,5 +313,8 @@ public class LoginSceneController : MonoBehaviour
     {
         FirebaseManager.OnLoginSuccess -= OnLoginSuccess;
         FirebaseManager.OnLoginFailed -= OnLoginFailed;
+
+        if (hideErrorCoroutine != null)
+            StopCoroutine(hideErrorCoroutine);
     }
 }
