@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b275561210a46124da617cff693c9b2d, type: 3}
+  m_Name: Scenario_Easy_CodeBlue
+  m_EditorClassIdentifier: Assembly-CSharp::ScenarioData
+  scenarioID: SCN_001
+  scenarioTitle: "Traumatic Arrest \u2013 Code Blue"
+  scenarioDescription: A patient is slumped and unresponsive in a chair
+  difficulty: 0
+  emergencyCode: 0
+  timeLimitSeconds: 180
+  patientAge: ~40s
+  patientGender: Male
+  patientPresentation: Patient slumped in chair, agonal breathing, unconscious
+  vitalSigns:
+  - RR <10/min
+  - Pulse Absent
+  - Unconscious
+  difficultyLabel: EASY
+  patientPrefab: {fileID: 1684600164335045884, guid: 8a20425a5eed80740a8d3c4daa7c4718, type: 3}
+  patientImage: {fileID: 0}
+  rpmAssessment:
+    respirationQuestion: What is the patient's breathing pattern?
+    respirationOptions:
+    - Agonal/Gasping (<10/min)
+    - Normal (10-29/min)
+    - Rapid (>30/min)
+    correctRespirationIndex: 0
+    respirationFeedback: Agonal breathing detected - less than 10 breaths per minute
+    perfusionQuestion: What is the patient's radial pulse?
+    perfusionOptions:
+    - No pulse detected
+    - Weak and rapid pulse
+    - Normal pulse
+    correctPerfusionIndex: 0
+    perfusionFeedback: No radial pulse - perfusion is absent
+    mentalStatusQuestion: What is the patient's mental status?
+    mentalStatusOptions:
+    - Unconscious/Unresponsive
+    - Confused/Altered
+    - Alert and Oriented
+    correctMentalStatusIndex: 0
+    mentalStatusFeedback: Patient is unconscious and unresponsive to stimuli
+  correctTriageCategory: 0
+  ehrActions:
+  - actionName: Initiate CPR (30:2 compressions/ventilations)
+    actionDescription: 
+    isCorrectAction: 1
+  - actionName: Apply tourniquet to limb
+    actionDescription: 
+    isCorrectAction: 0
+  - actionName: Administer oral fluids
+    actionDescription: 
+    isCorrectAction: 0
+  maxAccuracyPoints: 5
+  correctFeedback: Correct! Agonal breathing + absent perfusion = Immediate/Red.
+    Code Blue activated.
+  incorrectFeedback: Incorrect. Agonal breathing and absent pulse classify this patient
+    as Immediate/Red per START protocol.
+  clinicalExplanation: 'Per START triage: if breathing is absent or agonal AND perfusion
+    is absent, the patient is Immediate/Red. CPR must be initiated immediately.'
+  isMultiPatient: 0
+  additionalPatients: []
+  correctPriorityOrder: 0

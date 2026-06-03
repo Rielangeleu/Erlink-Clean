@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1071697750618",
+    "project_id": "erlinkar-3a41f",
+    "storage_bucket": "erlinkar-3a41f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1071697750618:android:5b191082f4b5522047c663",
+        "android_client_info": {
+          "package_name": "com.mapua.erlinkAR"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBW-Y8gdNvaoTKdPVELz4szaO8BVkNFrKo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
