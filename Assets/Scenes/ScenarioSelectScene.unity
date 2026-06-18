@@ -869,7 +869,10 @@ RectTransform:
   - {fileID: 890863817}
   - {fileID: 2132775655}
   - {fileID: 358485568}
+<<<<<<< HEAD
   - {fileID: 1523105475}
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
   - {fileID: 1830676813}
   m_Father: {fileID: 211194731}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1069,6 +1072,7 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+<<<<<<< HEAD
 --- !u!1 &320346315
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,6 +1148,8 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 320346315}
   m_CullTransparentMesh: 1
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &358485567
 GameObject:
   m_ObjectHideFlags: 0
@@ -1160,7 +1166,11 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
+<<<<<<< HEAD
   m_IsActive: 0
+=======
+  m_IsActive: 1
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!224 &358485568
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1173,6 +1183,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+<<<<<<< HEAD
   - {fileID: 1699583015}
   - {fileID: 1108832789}
   - {fileID: 320346316}
@@ -1182,6 +1193,14 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 225, y: -361}
+=======
+  - {fileID: 1523105475}
+  m_Father: {fileID: 294790283}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
   m_SizeDelta: {x: 100, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &358485569
@@ -1210,6 +1229,7 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+<<<<<<< HEAD
 --- !u!1 &430537140
 GameObject:
   m_ObjectHideFlags: 0
@@ -1254,6 +1274,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf6f7a422b9dce8479b621481990b020, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirebaseManager
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &582802514
 GameObject:
   m_ObjectHideFlags: 0
@@ -1402,7 +1424,10 @@ GameObject:
   - component: {fileID: 602477541}
   - component: {fileID: 602477543}
   - component: {fileID: 602477542}
+<<<<<<< HEAD
   - component: {fileID: 602477544}
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
   m_Layer: 5
   m_Name: BackButton
   m_TagString: Untagged
@@ -1467,6 +1492,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 602477540}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
 --- !u!114 &602477544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1511,6 +1537,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &707019611
 GameObject:
   m_ObjectHideFlags: 0
@@ -1943,6 +1971,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 767976699}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
 --- !u!1 &782233108
 GameObject:
   m_ObjectHideFlags: 0
@@ -2018,6 +2047,8 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 782233108}
   m_CullTransparentMesh: 1
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &813564645
 GameObject:
   m_ObjectHideFlags: 0
@@ -2416,6 +2447,7 @@ MonoBehaviour:
   easyScenario: {fileID: 11400000, guid: 6197b92d9fc9f1146b5b57dda3967142, type: 2}
   mediumPatientA: {fileID: 11400000, guid: 687f995e18d31204691fc1b727ba7f62, type: 2}
   mediumPatientB: {fileID: 11400000, guid: 587f018d90dfab342b32d52b38aafbae, type: 2}
+<<<<<<< HEAD
   hardPatientA: {fileID: 0}
   hardPatientB: {fileID: 0}
   hardPatientC: {fileID: 0}
@@ -2429,6 +2461,12 @@ MonoBehaviour:
   hardCardDescriptionText: {fileID: 2132775656}
   defaultHardDescription: "Coming soon \u2014 Future scope"
   unlockedHardDescription: "3 patients \xB7 8 minutes"
+=======
+  startEasyButton: {fileID: 1784555747}
+  startMediumButton: {fileID: 2146934143}
+  backButton: {fileID: 1830676814}
+  hardCardLockOverlay: {fileID: 1523105474}
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!4 &950478674
 Transform:
   m_ObjectHideFlags: 0
@@ -2519,6 +2557,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1079729862}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
 --- !u!1 &1108832788
 GameObject:
   m_ObjectHideFlags: 0
@@ -2594,6 +2633,8 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1108832788}
   m_CullTransparentMesh: 1
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &1110878647
 GameObject:
   m_ObjectHideFlags: 0
@@ -2872,6 +2913,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1172771820}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
 --- !u!1 &1265763967
 GameObject:
   m_ObjectHideFlags: 0
@@ -2921,6 +2963,8 @@ MonoBehaviour:
   fallbackHardScenarios: []
   preferFirestore: 1
   cacheScenariosLocally: 1
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &1324893651
 GameObject:
   m_ObjectHideFlags: 0
@@ -3195,7 +3239,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
+<<<<<<< HEAD
   m_Father: {fileID: 294790283}
+=======
+  m_Father: {fileID: 358485568}
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -3735,6 +3783,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1660859060}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
 --- !u!1 &1699583014
 GameObject:
   m_ObjectHideFlags: 0
@@ -3810,6 +3859,8 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1699583014}
   m_CullTransparentMesh: 1
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &1744246749
 GameObject:
   m_ObjectHideFlags: 0
@@ -4908,5 +4959,8 @@ SceneRoots:
   - {fileID: 707019615}
   - {fileID: 1611500446}
   - {fileID: 950478674}
+<<<<<<< HEAD
   - {fileID: 430537141}
   - {fileID: 1265763968}
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93

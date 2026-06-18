@@ -39,9 +39,12 @@ public class RPMSequenceController : MonoBehaviour
     private int[] _correctAnswers = new int[3];
     private int _correctCount = 0;
 
+<<<<<<< HEAD
     // Runtime scenario support
     private RuntimeScenarioData _currentRuntimeScenario;
     
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     // Events
     public Action OnRPMComplete;
 
@@ -53,6 +56,10 @@ public class RPMSequenceController : MonoBehaviour
 
     void Start()
     {
+<<<<<<< HEAD
+=======
+        // Find scoring system if not assigned
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (scoringSystem == null)
             scoringSystem = FindFirstObjectByType<ScoringSystem>();
     }
@@ -60,30 +67,46 @@ public class RPMSequenceController : MonoBehaviour
     public void StartRPMAssessment(ScenarioData scenario)
     {
         _currentScenario = scenario;
+<<<<<<< HEAD
         _currentRuntimeScenario = null;
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         _assessmentOrderIndex = 0;
         _quizStepIndex = 0;
         _selectedAnswers = new int[3];
         _correctCount = 0;
 
+<<<<<<< HEAD
         if (scenario == null || scenario.rpmAssessment == null)
         {
             Debug.LogError("RPMSequenceController: Scenario or rpmAssessment is null!");
             return;
         }
 
+=======
+        // Store correct answers for later comparison
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         RPMAssessment rpm = scenario.rpmAssessment;
         _correctAnswers[0] = rpm.correctRespirationIndex;
         _correctAnswers[1] = rpm.correctPerfusionIndex;
         _correctAnswers[2] = rpm.correctMentalStatusIndex;
 
+<<<<<<< HEAD
         if (rpmPanel != null) rpmPanel.SetActive(false);
         if (uiManager != null) uiManager.SetTriageButtonsInteractable(false);
 
+=======
+        // Enforce total interface isolation at startup
+        if (rpmPanel != null) rpmPanel.SetActive(false);
+        if (uiManager != null) uiManager.SetTriageButtonsInteractable(false);
+
+        // SHOW ALL BUBBLES AT ONCE to force the student to make an intentional choice
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (respirationBubble != null) respirationBubble.SetActive(true);
         if (perfusionBubble != null) perfusionBubble.SetActive(true);
         if (mentalBubble != null) mentalBubble.SetActive(true);
 
+<<<<<<< HEAD
         Debug.Log("Sequential RPM Initialized for ScriptableObject scenario.");
     }
 
@@ -150,13 +173,21 @@ public class RPMSequenceController : MonoBehaviour
         if (_currentRuntimeScenario != null)
             return _currentRuntimeScenario.rpmAssessment;
         return null;
+=======
+        Debug.Log("Sequential RPM Initialized: All bubbles visible. Enforcing R -> P -> M order.");
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     // ── 3D WORLD INTERACTION CLICK HOOKS WITH ORDER & PLACEMENT VALIDATION ──
 
     public void OnRespirationBubbleTapped()
     {
+<<<<<<< HEAD
         if (!HasActiveScenario())
+=======
+        // CRITICAL CHECK: Block clicks if no patient has been spawned into AR yet!
+        if (_currentScenario == null)
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         {
             TriggerSequenceErrorAlert("You must tap the scene floor to place the patient first!");
             return;
@@ -170,7 +201,11 @@ public class RPMSequenceController : MonoBehaviour
             if (respirationBubble != null) respirationBubble.SetActive(false);
 
             if (infoCardUI != null)
+<<<<<<< HEAD
                 infoCardUI.RevealRespirationValue(GetVitalSign(0));
+=======
+                infoCardUI.RevealRespirationValue(_currentScenario.vitalSigns.Length > 0 ? _currentScenario.vitalSigns[0] : "Assessed");
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
             CheckSequenceProgression();
         }
@@ -182,7 +217,12 @@ public class RPMSequenceController : MonoBehaviour
 
     public void OnPerfusionBubbleTapped()
     {
+<<<<<<< HEAD
         if (!HasActiveScenario())
+=======
+        // CRITICAL CHECK: Block clicks if no patient has been spawned into AR yet!
+        if (_currentScenario == null)
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         {
             TriggerSequenceErrorAlert("You must tap the scene floor to place the patient first!");
             return;
@@ -196,7 +236,11 @@ public class RPMSequenceController : MonoBehaviour
             if (perfusionBubble != null) perfusionBubble.SetActive(false);
 
             if (infoCardUI != null)
+<<<<<<< HEAD
                 infoCardUI.RevealPerfusionValue(GetVitalSign(1));
+=======
+                infoCardUI.RevealPerfusionValue(_currentScenario.vitalSigns.Length > 1 ? _currentScenario.vitalSigns[1] : "Assessed");
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
             CheckSequenceProgression();
         }
@@ -208,7 +252,12 @@ public class RPMSequenceController : MonoBehaviour
 
     public void OnMentalBubbleTapped()
     {
+<<<<<<< HEAD
         if (!HasActiveScenario())
+=======
+        // CRITICAL CHECK: Block clicks if no patient has been spawned into AR yet!
+        if (_currentScenario == null)
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         {
             TriggerSequenceErrorAlert("You must tap the scene floor to place the patient first!");
             return;
@@ -222,7 +271,11 @@ public class RPMSequenceController : MonoBehaviour
             if (mentalBubble != null) mentalBubble.SetActive(false);
 
             if (infoCardUI != null)
+<<<<<<< HEAD
                 infoCardUI.RevealMentalValue(GetVitalSign(2));
+=======
+                infoCardUI.RevealMentalValue(_currentScenario.vitalSigns.Length > 2 ? _currentScenario.vitalSigns[2] : "Assessed");
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
             CheckSequenceProgression();
         }
@@ -232,6 +285,11 @@ public class RPMSequenceController : MonoBehaviour
         }
     }
 
+<<<<<<< HEAD
+=======
+    // ── INTERACTION SEQUENCE ROUTING LOGIC ──
+
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     void CheckSequenceProgression()
     {
         if (_assessmentOrderIndex == 3)
@@ -246,6 +304,10 @@ public class RPMSequenceController : MonoBehaviour
         if (uiManager != null)
         {
             uiManager.ShowCodeAlert(trackingMessage);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             CancelInvoke(nameof(ClearAlertBanner));
             Invoke(nameof(ClearAlertBanner), 2.5f);
         }
@@ -265,6 +327,7 @@ public class RPMSequenceController : MonoBehaviour
 
     void LoadCurrentStepData()
     {
+<<<<<<< HEAD
         RPMAssessment rpm = GetRPMAssessment();
         if (rpm == null)
         {
@@ -272,6 +335,9 @@ public class RPMSequenceController : MonoBehaviour
             return;
         }
         
+=======
+        RPMAssessment rpm = _currentScenario.rpmAssessment;
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         string question = "";
         string[] options = null;
 
@@ -296,7 +362,11 @@ public class RPMSequenceController : MonoBehaviour
 
         for (int i = 0; i < optionButtons.Length; i++)
         {
+<<<<<<< HEAD
             if (options != null && i < options.Length)
+=======
+            if (i < options.Length)
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             {
                 optionButtons[i].gameObject.SetActive(true);
                 optionButtonTexts[i].text = options[i];
@@ -318,12 +388,17 @@ public class RPMSequenceController : MonoBehaviour
     {
         _selectedAnswers[_quizStepIndex] = selectedIndex;
 
+<<<<<<< HEAD
+=======
+        // Check if answer is correct
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         bool isCorrect = selectedIndex == _correctAnswers[_quizStepIndex];
         if (isCorrect)
         {
             _correctCount++;
         }
 
+<<<<<<< HEAD
         RPMAssessment rpm = GetRPMAssessment();
         string feedback = "";
 
@@ -341,6 +416,22 @@ public class RPMSequenceController : MonoBehaviour
                     feedback = rpm.mentalStatusFeedback;
                     break;
             }
+=======
+        RPMAssessment rpm = _currentScenario.rpmAssessment;
+        string feedback = "";
+
+        switch (_quizStepIndex)
+        {
+            case 0:
+                feedback = rpm.respirationFeedback;
+                break;
+            case 1:
+                feedback = rpm.perfusionFeedback;
+                break;
+            case 2:
+                feedback = rpm.mentalStatusFeedback;
+                break;
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         }
 
         Color selectedColor = isCorrect ?
@@ -358,7 +449,11 @@ public class RPMSequenceController : MonoBehaviour
         }
 
         foreach (var btn in optionButtons)
+<<<<<<< HEAD
             if (btn != null) btn.interactable = false;
+=======
+            btn.interactable = false;
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
         Invoke(nameof(NextQuizStep), 2.0f);
     }
@@ -381,6 +476,10 @@ public class RPMSequenceController : MonoBehaviour
 
     void CompleteRPM()
     {
+<<<<<<< HEAD
+=======
+        // CRITICAL FIX: Send RPM results to ScoringSystem
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (scoringSystem != null)
         {
             scoringSystem.RecordRPMAssessment(_correctCount);

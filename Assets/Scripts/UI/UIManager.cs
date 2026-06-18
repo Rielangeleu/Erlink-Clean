@@ -1,7 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+<<<<<<< HEAD
 using UnityEngine.SceneManagement;
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
 /// <summary>
 /// Controls all UI elements during an AR triage scenario.
@@ -23,9 +26,12 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI codeAlertText;
     public GameObject placementPrompt;
 
+<<<<<<< HEAD
     [Header("Navigation")]
     public Button backButton;
 
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     // ── REMOVED OLD SCENARIO CARD / ADDED EXACT MATCH REFERENCE ──
     [Header("Patient Info Card System")]
     public GameObject patientInfoCard;
@@ -53,6 +59,7 @@ public class UIManager : MonoBehaviour
         // ── FIX: Ensure your actual PatientInfoCard STAYS VISIBLE on start ──
         if (patientInfoCard != null)
             patientInfoCard.SetActive(true);
+<<<<<<< HEAD
         
         // ── ADD BACK BUTTON FUNCTIONALITY ──
         if (backButton != null)
@@ -79,6 +86,8 @@ public class UIManager : MonoBehaviour
         
         // Load the scenario select scene
         SceneManager.LoadScene("ScenarioSelectScene");
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     // ── Scenario Title ───────────────────────────────────

@@ -2,7 +2,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
+<<<<<<< HEAD
 using System.Collections;
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
 /// <summary>
 /// Controls the EHR intervention panel.
@@ -12,6 +15,7 @@ using System.Collections;
 /// </summary>
 public class EHRPanelUI : MonoBehaviour
 {
+<<<<<<< HEAD
     [Header("UI References - EHR Panel")]
     public Button[] ehrOptionButtons;
     public TextMeshProUGUI[] ehrOptionTexts;
@@ -25,6 +29,13 @@ public class EHRPanelUI : MonoBehaviour
     public TextMeshProUGUI[] priorityButtonTexts;
     public GameObject priorityFeedbackPanel;
     public TextMeshProUGUI priorityFeedbackText;
+=======
+    [Header("UI References")]
+    public Button[] ehrOptionButtons;
+    public TextMeshProUGUI[] ehrOptionTexts;
+    public GameObject feedbackPanel;
+    public TextMeshProUGUI feedbackText;
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     [Header("Dependencies")]
     public TriageDecisionManager decisionManager;
@@ -36,6 +47,7 @@ public class EHRPanelUI : MonoBehaviour
     public Color correctColor = new Color(0.086f, 0.635f, 0.290f);
     public Color wrongColor = new Color(0.863f, 0.149f, 0.149f);
 
+<<<<<<< HEAD
     // State tracking
     private bool _ehrAnswered = false;
     private bool _ehrIsCorrect = false;
@@ -86,10 +98,22 @@ public class EHRPanelUI : MonoBehaviour
                 Debug.Log($"Wired EHR Button {i}");
             }
         }
+=======
+    private bool _answered = false;
+    private bool _isCorrect = false;
+    private int _selectedIndex = -1;
+
+    void Start()
+    {
+        // Find scoring system if not assigned
+        if (scoringSystem == null)
+            scoringSystem = FindFirstObjectByType<ScoringSystem>();
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     public void PopulateEHRActions(ScenarioData scenario)
     {
+<<<<<<< HEAD
         if (scenario == null || scenario.ehrActions == null)
         {
             Debug.LogError("EHRPanelUI: Scenario or ehrActions is null!");
@@ -118,14 +142,33 @@ public class EHRPanelUI : MonoBehaviour
                            scenario.difficulty == DifficultyLevel.Hard);
 
         // Populate EHR Actions
+=======
+        if (scenario == null || scenario.ehrActions == null) return;
+
+        // Reset interaction lock tracking state flags
+        _answered = false;
+        _isCorrect = false;
+        _selectedIndex = -1;
+
+        if (feedbackPanel != null)
+            feedbackPanel.SetActive(false);
+
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         for (int i = 0; i < ehrOptionButtons.Length; i++)
         {
             if (i < scenario.ehrActions.Length)
             {
                 ehrOptionButtons[i].gameObject.SetActive(true);
                 ehrOptionButtons[i].interactable = true;
+<<<<<<< HEAD
                 var img = ehrOptionButtons[i].GetComponent<Image>();
                 if (img != null) img.color = defaultColor;
+=======
+
+                var img = ehrOptionButtons[i].GetComponent<UnityEngine.UI.Image>();
+                if (img != null) img.color = defaultColor;
+
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
                 ehrOptionTexts[i].text = scenario.ehrActions[i].actionName;
                 ehrOptionTexts[i].color = new Color(0.12f, 0.16f, 0.23f);
             }
@@ -134,6 +177,7 @@ public class EHRPanelUI : MonoBehaviour
                 ehrOptionButtons[i].gameObject.SetActive(false);
             }
         }
+<<<<<<< HEAD
         
         // Cache priority data for later use
         _cachedPriorityOptions = scenario.priorityOptions;
@@ -400,10 +444,13 @@ public class EHRPanelUI : MonoBehaviour
         
         _isProcessing = false;
         _currentPriorityCoroutine = null;
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     public void OnEHROptionSelected(int index)
     {
+<<<<<<< HEAD
         Debug.Log($"=== OnEHROptionSelected called with index: {index} ===");
         
         if (_ehrAnswered) return;
@@ -424,6 +471,19 @@ public class EHRPanelUI : MonoBehaviour
 
         Color resultColor = isCorrect ? correctColor : wrongColor;
 
+=======
+        if (_answered) return;
+        _answered = true;
+        _selectedIndex = index;
+
+        ScenarioData scenario = scenarioLoader.GetActiveScenario();
+        bool isCorrect = scenario.ehrActions[index].isCorrectAction;
+        _isCorrect = isCorrect;
+
+        Color resultColor = isCorrect ? correctColor : wrongColor;
+
+        // Animate selected button
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         Image btnImage = ehrOptionButtons[index].GetComponent<Image>();
         if (btnImage != null)
         {
@@ -438,6 +498,7 @@ public class EHRPanelUI : MonoBehaviour
             btnRt.DOPunchScale(new Vector3(0.05f, 0.05f, 0), 0.3f);
         }
 
+<<<<<<< HEAD
         if (ehrFeedbackPanel != null && ehrFeedbackText != null)
         {
             ehrFeedbackPanel.SetActive(true);
@@ -467,10 +528,42 @@ public class EHRPanelUI : MonoBehaviour
         
         if (decisionManager != null)
             decisionManager.OnEHRActionSelected(_ehrIsCorrect);
+=======
+        // Show feedback
+        if (feedbackPanel != null && feedbackText != null)
+        {
+            feedbackPanel.SetActive(true);
+            feedbackText.text = isCorrect
+                ? $"✓ Correct! {scenario.ehrActions[index].actionDescription}"
+                : $"✗ Incorrect. {scenario.ehrActions[index].actionDescription}";
+            feedbackText.color = resultColor;
+        }
+
+        // Disable all buttons after selection
+        foreach (var btn in ehrOptionButtons)
+            if (btn != null) btn.interactable = false;
+
+        // Send to scoring system (Appropriate Action = 1 point)
+        if (scoringSystem != null)
+        {
+            scoringSystem.RecordEHRAction(isCorrect);
+            Debug.Log($"EHR Action Selected: {(isCorrect ? "Correct" : "Incorrect")} - Appropriate Action +{(isCorrect ? "1" : "0")} point");
+        }
+
+        // Notify decision manager after delay
+        Invoke(nameof(NotifyDecisionManager), 2.0f);
+    }
+
+    void NotifyDecisionManager()
+    {
+        if (decisionManager != null)
+            decisionManager.OnEHRActionSelected(_isCorrect);
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     public void ResetPanel()
     {
+<<<<<<< HEAD
         Debug.Log("EHRPanelUI.ResetPanel called");
         
         if (_currentPriorityCoroutine != null)
@@ -511,15 +604,32 @@ public class EHRPanelUI : MonoBehaviour
         for (int i = 0; i < ehrOptionButtons.Length; i++)
         {
             if (ehrOptionButtons[i] != null)
+=======
+        _answered = false;
+        _isCorrect = false;
+        _selectedIndex = -1;
+
+        if (feedbackPanel != null)
+            feedbackPanel.SetActive(false);
+
+        // Reset button appearances
+        for (int i = 0; i < ehrOptionButtons.Length; i++)
+        {
+            if (ehrOptionButtons[i] != null && ehrOptionButtons[i].gameObject.activeSelf)
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             {
                 ehrOptionButtons[i].interactable = true;
                 var img = ehrOptionButtons[i].GetComponent<Image>();
                 if (img != null) img.color = defaultColor;
+<<<<<<< HEAD
                 
                 if (i < ehrOptionTexts.Length && ehrOptionTexts[i] != null)
                 {
                     ehrOptionTexts[i].color = new Color(0.12f, 0.16f, 0.23f);
                 }
+=======
+                ehrOptionTexts[i].color = new Color(0.12f, 0.16f, 0.23f);
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             }
         }
     }

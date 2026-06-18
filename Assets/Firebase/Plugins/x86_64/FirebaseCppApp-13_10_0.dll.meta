@@ -2,6 +2,7 @@ fileFormatVersion: 2
 guid: 93b728fbe86741148555cf32e7e0e50d
 labels:
 - gvh
+<<<<<<< HEAD
 - gvh_version-13.10.0
 - gvhp_exportpath-Firebase/Plugins/x86_64/FirebaseCppApp-13_10_0.dll
 timeCreated: 1480838400
@@ -54,6 +55,35 @@ PluginImporter:
     WebStreamed:
       enabled: 0
       settings: {}
+=======
+PluginImporter:
+  externalObjects: {}
+  serializedVersion: 3
+  iconMap: {}
+  executionOrder: {}
+  defineConstraints: []
+  isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
+  platformData:
+    Any:
+      enabled: 1
+      settings: {}
+    Editor:
+      enabled: 0
+      settings:
+        CPU: x86_64
+        DefaultValueInitialized: true
+    Linux64:
+      enabled: 1
+      settings:
+        CPU: x86_64
+    OSXUniversal:
+      enabled: 1
+      settings:
+        CPU: x86_64
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     Win:
       enabled: 0
       settings:
@@ -62,6 +92,7 @@ PluginImporter:
       enabled: 1
       settings:
         CPU: x86_64
+<<<<<<< HEAD
     WindowsStoreApps:
       enabled: 0
       settings:
@@ -79,3 +110,8 @@ PluginImporter:
   userData:
   assetBundleName:
   assetBundleVariant:
+=======
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93

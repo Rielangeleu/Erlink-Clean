@@ -3236,6 +3236,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1390264936}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
 --- !u!1 &1492155486
 GameObject:
   m_ObjectHideFlags: 0
@@ -3280,6 +3281,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6c4308c6eda19b4498dd6b76b20cae8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirebaseScenarioLoader
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 --- !u!1 &1503520002
 GameObject:
   m_ObjectHideFlags: 0
@@ -4366,8 +4369,13 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
+<<<<<<< HEAD
   m_AnchoredPosition: {x: 1970.4015, y: -950}
   m_SizeDelta: {x: 3900.803, y: 700}
+=======
+  m_AnchoredPosition: {x: 338.22687, y: -950}
+  m_SizeDelta: {x: 636.45374, y: 700}
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1830121959
 MonoBehaviour:
@@ -5191,4 +5199,7 @@ SceneRoots:
   - {fileID: 1613053626}
   - {fileID: 1697325768}
   - {fileID: 1087572325}
+<<<<<<< HEAD
   - {fileID: 1492155487}
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93

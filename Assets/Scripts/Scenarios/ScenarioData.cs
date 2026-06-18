@@ -66,9 +66,12 @@ public class ScenarioData : ScriptableObject
     public DifficultyLevel difficulty;
     public EmergencyCode emergencyCode;
 
+<<<<<<< HEAD
     [Header("Order Index (for sorting)")]
     public int orderIndex = 999;  // ADD THIS FIELD
 
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     [Header("Time Limit (seconds)")]
     public float timeLimitSeconds = 180f;
 
@@ -104,9 +107,12 @@ public class ScenarioData : ScriptableObject
     public bool isMultiPatient = false;
     public ScenarioData[] additionalPatients;
     public int correctPriorityOrder;
+<<<<<<< HEAD
 
     [Header("Priority Order (for Multi-Patient)")]
     public string priorityQuestion = "Which patient requires immediate attention first?";
     public string[] priorityOptions;
     public int correctPriorityIndex = 0;
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 }

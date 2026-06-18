@@ -1,4 +1,5 @@
 using UnityEngine;
+<<<<<<< HEAD
 using System.Collections.Generic;
 
 /// <summary>
@@ -7,22 +8,36 @@ using System.Collections.Generic;
 public static class ScenarioSelector
 {
     // Original properties - KEEP THESE (used by existing code)
+=======
+
+/// <summary>
+/// Passed between scenes to tell ScenarioLoader
+/// which scenario to load.
+/// Uses static variables so data persists between scenes.
+/// </summary>
+public static class ScenarioSelector
+{
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     public static ScenarioData SelectedScenario;
     public static DifficultyLevel SelectedDifficulty;
 
     // For medium — tracks which patient we're on
     public static int CurrentPatientIndex = 0;
     public static ScenarioData[] MediumPatients;
+<<<<<<< HEAD
     
     // For hard — tracks which patient we're on (3 patients)
     public static ScenarioData[] HardPatients;
 
     // For Firestore runtime scenarios
     public static RuntimeScenarioData SelectedRuntimeScenario;
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     public static void SelectEasy(ScenarioData scenario)
     {
         SelectedScenario = scenario;
+<<<<<<< HEAD
         SelectedRuntimeScenario = null;
         SelectedDifficulty = DifficultyLevel.Easy;
         CurrentPatientIndex = 0;
@@ -90,6 +105,22 @@ public static class ScenarioSelector
         MediumPatients = null;
         HardPatients = null;
         Debug.Log($"ScenarioSelector: Hard runtime scenario selected - Patient A: {patientA?.scenarioTitle}, Patient B: {patientB?.scenarioTitle}, Patient C: {patientC?.scenarioTitle}");
+=======
+        SelectedDifficulty = DifficultyLevel.Easy;
+        CurrentPatientIndex = 0;
+        MediumPatients = null;
+    }
+
+    public static void SelectMedium(
+        ScenarioData patientA,
+        ScenarioData patientB)
+    {
+        MediumPatients = new ScenarioData[]
+            { patientA, patientB };
+        SelectedScenario = patientA; // Start with Patient A
+        SelectedDifficulty = DifficultyLevel.Medium;
+        CurrentPatientIndex = 0;
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     public static ScenarioData GetNextMediumPatient()
@@ -98,6 +129,7 @@ public static class ScenarioSelector
         CurrentPatientIndex++;
         if (CurrentPatientIndex < MediumPatients.Length)
             return MediumPatients[CurrentPatientIndex];
+<<<<<<< HEAD
         return null;
     }
     
@@ -108,10 +140,14 @@ public static class ScenarioSelector
         if (CurrentPatientIndex < HardPatients.Length)
             return HardPatients[CurrentPatientIndex];
         return null;
+=======
+        return null; // All patients done
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     public static bool HasNextPatient()
     {
+<<<<<<< HEAD
         if (MediumPatients != null)
             return CurrentPatientIndex + 1 < MediumPatients.Length;
         if (HardPatients != null)
@@ -130,14 +166,24 @@ public static class ScenarioSelector
         if (HardPatients == null) return false;
         return CurrentPatientIndex + 1 < HardPatients.Length;
     }
+=======
+        if (MediumPatients == null) return false;
+        return CurrentPatientIndex + 1 < MediumPatients.Length;
+    }
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     public static void Reset()
     {
         SelectedScenario = null;
+<<<<<<< HEAD
         SelectedRuntimeScenario = null;
         CurrentPatientIndex = 0;
         MediumPatients = null;
         HardPatients = null;
         Debug.Log("ScenarioSelector: Reset called");
+=======
+        CurrentPatientIndex = 0;
+        MediumPatients = null;
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 }

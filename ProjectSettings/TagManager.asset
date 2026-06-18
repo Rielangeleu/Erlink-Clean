@@ -2,9 +2,14 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
+<<<<<<< HEAD
   serializedVersion: 3
   tags:
   - Patient
+=======
+  serializedVersion: 2
+  tags: []
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
   layers:
   - Default
   - TransparentFX
@@ -42,6 +47,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+<<<<<<< HEAD
   m_RenderingLayers:
   - Default
   m_MigratedRenderPipelines: []
+=======
+>>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
