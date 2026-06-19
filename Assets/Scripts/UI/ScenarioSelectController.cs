@@ -2,43 +2,28 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-<<<<<<< HEAD
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-=======
-
-/// <summary>
-/// Scenario selection screen.
-/// Sets ScenarioSelector before loading MainAR.
-/// </summary>
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 public class ScenarioSelectController : MonoBehaviour
 {
     [Header("Scenario References")]
     public ScenarioData easyScenario;
     public ScenarioData mediumPatientA;
     public ScenarioData mediumPatientB;
-<<<<<<< HEAD
     public ScenarioData hardPatientA;
     public ScenarioData hardPatientB;
     public ScenarioData hardPatientC;
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     [Header("Buttons")]
     public Button startEasyButton;
     public Button startMediumButton;
-<<<<<<< HEAD
     public Button startHardButton;
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     public Button backButton;
 
     [Header("Hard Card")]
     public GameObject hardCardLockOverlay;
-<<<<<<< HEAD
     public GameObject hardCardTagsRow;  // Reference to the tags row (circles)
     public GameObject hardCardStartButton; // Reference to the Hard card start button GameObject
     public TextMeshProUGUI hardCardDescriptionText; // Reference to the Hard card description text
@@ -60,18 +45,12 @@ public class ScenarioSelectController : MonoBehaviour
         
         StartCoroutine(LoadFirebaseScenarios());
         
-=======
-
-    void Start()
-    {
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (startEasyButton != null)
             startEasyButton.onClick.AddListener(StartEasy);
 
         if (startMediumButton != null)
             startMediumButton.onClick.AddListener(StartMedium);
 
-<<<<<<< HEAD
         if (startHardButton != null)
             startHardButton.onClick.AddListener(StartHard);
 
@@ -574,20 +553,10 @@ public class ScenarioSelectController : MonoBehaviour
         {
             AllEasyScenarios = new List<ScenarioData> { easyScenario };
         }
-=======
-        if (backButton != null)
-            backButton.onClick.AddListener(() =>
-                SceneManager.LoadScene("DashboardScene"));
-
-        // Hard scenario locked
-        if (hardCardLockOverlay != null)
-            hardCardLockOverlay.SetActive(true);
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     void StartEasy()
     {
-<<<<<<< HEAD
         if (easyScenario != null)
         {
             Debug.Log($"=== Starting Easy Scenario ===");
@@ -604,15 +573,10 @@ public class ScenarioSelectController : MonoBehaviour
         {
             Debug.LogError("No easy scenario available!");
         }
-=======
-        ScenarioSelector.SelectEasy(easyScenario);
-        SceneManager.LoadScene("MainAR");
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     void StartMedium()
     {
-<<<<<<< HEAD
         if (mediumPatientA != null && mediumPatientB != null)
         {
             Debug.Log($"=== Starting Medium Scenario ===");
@@ -655,10 +619,5 @@ public class ScenarioSelectController : MonoBehaviour
         {
             Debug.LogError("No hard scenarios available!");
         }
-=======
-        ScenarioSelector.SelectMedium(
-            mediumPatientA, mediumPatientB);
-        SceneManager.LoadScene("MainAR");
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 }

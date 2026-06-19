@@ -127,13 +127,6 @@ public class ObjectSpawnerBridge : MonoBehaviour
         if (uiManager != null)
         {
             uiManager.ShowPlacementPrompt(false);
-<<<<<<< HEAD
-=======
-
-            // ── CRITICAL RE-ROUTE FIX ──
-            // Do NOT call ShowRPMPanel(true) here anymore! We keep it hidden 
-            // until the player taps the first floating bubble object.
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             uiManager.ShowRPMPanel(false);
         }
 
@@ -142,7 +135,6 @@ public class ObjectSpawnerBridge : MonoBehaviour
 
     void StartRPM()
     {
-<<<<<<< HEAD
         Debug.Log("ObjectSpawnerBridge: StartRPM called");
         
         if (scenarioLoader == null) 
@@ -182,26 +174,11 @@ public class ObjectSpawnerBridge : MonoBehaviour
         else
         {
             Debug.LogError($"ObjectSpawnerBridge: Missing references - scenarioLoader={scenarioLoader != null}, rpmController={rpmController != null}");
-=======
-        if (scenarioLoader == null) scenarioLoader = FindFirstObjectByType<ScenarioLoader>();
-        if (rpmController == null) rpmController = FindFirstObjectByType<RPMSequenceController>();
-
-        if (scenarioLoader != null && rpmController != null)
-        {
-            var scenario = scenarioLoader.GetActiveScenario();
-            if (scenario != null)
-            {
-                // This triggers 'StartRPMAssessment', which activates the Respiration bubble
-                rpmController.StartRPMAssessment(scenario);
-                Debug.Log("RPM Sequence triggered cleanly! 3D world interactive bubbles are active.");
-            }
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         }
     }
 
     public void ResetPlacement()
     {
-<<<<<<< HEAD
         Debug.Log($"ObjectSpawnerBridge.ResetPlacement called - Current state: _patientPlaced={_patientPlaced}");
         
         _patientPlaced = false;
@@ -293,14 +270,5 @@ public class ObjectSpawnerBridge : MonoBehaviour
         {
             Debug.LogError($"Failed to reassign prefab to spawner: {e.Message}");
         }
-=======
-        _patientPlaced = false;
-        if (objectSpawner != null)
-        {
-            objectSpawner.enabled = true;
-        }
-        if (uiManager != null)
-            uiManager.ShowPlacementPrompt(true);
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 }

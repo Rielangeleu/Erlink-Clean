@@ -2,10 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
-<<<<<<< HEAD
 using System.Collections.Generic;
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
 /// <summary>
 /// Manages the complete triage decision flow.
@@ -27,13 +24,8 @@ public class TriageDecisionManager : MonoBehaviour
     [Header("UI Panels")]
     public Button submitButton;
     public GameObject ehrPanel;
-<<<<<<< HEAD
     public GameObject priorityPanel;
 
-=======
-
-    // ── FIX: Direct reference bypasses Unity finding inactive object limit ──
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     public EHRPanelUI ehrPanelUI;
 
     public GameObject validationAlertPanel;
@@ -47,7 +39,6 @@ public class TriageDecisionManager : MonoBehaviour
     private bool _rpmComplete = false;
     private bool _tagPlaced = false;
     private bool _ehrComplete = false;
-<<<<<<< HEAD
     private bool _priorityComplete = false;
     private float _decisionStartTime;
     private TriageCategory _selectedCategory;
@@ -64,27 +55,12 @@ public class TriageDecisionManager : MonoBehaviour
         if (rpmController != null)
             rpmController.OnRPMComplete += OnRPMSequenceComplete;
 
-=======
-    private float _decisionStartTime;
-    private TriageCategory _selectedCategory;
-
-    void Start()
-    {
-        // Wire RPM completion event
-        if (rpmController != null)
-            rpmController.OnRPMComplete += OnRPMSequenceComplete;
-
-        // Wire submit button
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (submitButton != null)
             submitButton.onClick.AddListener(OnSubmitDecision);
 
         _decisionStartTime = Time.time;
-<<<<<<< HEAD
         
         PatientAssessmentTracker.ClearAssessments();
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     void OnRPMSequenceComplete()
@@ -92,10 +68,6 @@ public class TriageDecisionManager : MonoBehaviour
         _rpmComplete = true;
         Debug.Log("RPM complete — triage tags now active");
 
-<<<<<<< HEAD
-=======
-        // Animate vital bubbles to show they're assessed
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (uiManager != null)
             uiManager.ShowRPMPanel(false);
     }
@@ -117,10 +89,6 @@ public class TriageDecisionManager : MonoBehaviour
         _selectedCategory = dropZone.GetSelectedCategory();
         float timeTaken = Time.time - _decisionStartTime;
 
-<<<<<<< HEAD
-=======
-        // THESIS RULE 3: Validate against START protocol
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         ValidateDecision(_selectedCategory, timeTaken);
     }
 
@@ -128,7 +96,6 @@ public class TriageDecisionManager : MonoBehaviour
     {
         if (scenarioLoader == null || scoringSystem == null) return;
 
-<<<<<<< HEAD
         _currentScenario = scenarioLoader.GetActiveScenario();
         
         if (_currentScenario == null)
@@ -336,27 +303,6 @@ public class TriageDecisionManager : MonoBehaviour
         }
         
         HandleScenarioTransition();
-=======
-        ScenarioData scenario = scenarioLoader.GetActiveScenario();
-        if (scenario == null) return;
-
-        bool isCorrect = selected == scenario.correctTriageCategory;
-
-        if (!isCorrect)
-        {
-            // Show under-triage / over-triage alert overlay canvas
-            ShowValidationAlert(selected, scenario.correctTriageCategory);
-        }
-
-        // THESIS RULE 4: Show EHR panel regardless
-        ShowEHRPanel();
-
-        // Record decision for scoring matrix metrics
-        scoringSystem.RecordTriageDecision(
-            selected,
-            scenario.correctTriageCategory,
-            timeTaken);
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     void ShowValidationAlert(TriageCategory selected, TriageCategory correct)
@@ -373,10 +319,6 @@ public class TriageDecisionManager : MonoBehaviour
 
         validationAlertText.text = msg;
 
-<<<<<<< HEAD
-=======
-        // Flash red screen overlay canvas bounding frames
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (alertOverlay != null)
         {
             alertOverlay.DOKill();
@@ -385,74 +327,19 @@ public class TriageDecisionManager : MonoBehaviour
         }
     }
 
-<<<<<<< HEAD
-=======
-    void ShowEHRPanel()
-    {
-        // THESIS RULE 4: Must select medical intervention
-        if (ehrPanel != null)
-        {
-            ehrPanel.SetActive(true);
-            CanvasGroup cg = ehrPanel.GetComponent<CanvasGroup>();
-            if (cg != null)
-            {
-                cg.DOKill();
-                cg.alpha = 0;
-                cg.DOFade(1f, 0.3f);
-            }
-        }
-    }
-
-    public void OnEHRActionSelected(bool isCorrectAction)
-    {
-        _ehrComplete = true;
-
-        // Record EHR evaluation score choice arrays
-        if (scoringSystem != null)
-        {
-            scoringSystem.RecordEHRAction(isCorrectAction);
-            scoringSystem.CalculateFinalScore();
-        }
-
-        // Hide panels prior to executing state transitions
-        if (ehrPanel != null) ehrPanel.SetActive(false);
-        if (validationAlertPanel != null) validationAlertPanel.SetActive(false);
-
-        HandleScenarioTransition();
-    }
-
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     void HandleScenarioTransition()
     {
         ScenarioManager sm = FindAnyObjectByType<ScenarioManager>();
 
-<<<<<<< HEAD
         if (sm != null && !sm.IsLastPatient() && !_isMultiPatient)
         {
             ResetManagerStates();
-=======
-        // Check if there are more patients left to evaluate in multi-victim configurations
-        if (sm != null && !sm.IsLastPatient())
-        {
-            // Reset local verification state flags before shifting to Patient B
-            ResetManagerStates();
-
-            // Load next patient via active spawner structures
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             sm.LoadNextPatient();
         }
         else
         {
             Debug.Log("All scenario targets completed successfully! Routing to FeedbackScene.");
-<<<<<<< HEAD
             ResetManagerStates();
-=======
-
-            // Reset local state metrics so tracking bounds start fresh next session
-            ResetManagerStates();
-
-            // All targets completed — jump scenes cleanly
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             UnityEngine.SceneManagement.SceneManager.LoadScene("FeedbackScene");
         }
     }
@@ -462,7 +349,6 @@ public class TriageDecisionManager : MonoBehaviour
         _rpmComplete = false;
         _tagPlaced = false;
         _ehrComplete = false;
-<<<<<<< HEAD
         _priorityComplete = false;
         _completedPatientsCount = 0;
         _decisionStartTime = Time.time;
@@ -502,36 +388,12 @@ public class TriageDecisionManager : MonoBehaviour
         temp.patientPrefab = runtime.patientPrefab;
         
         return temp;
-=======
-        _decisionStartTime = Time.time;
-
-        // Clear active drop center properties
-        if (dropZone != null)
-        {
-            dropZone.ResetDropZone();
-        }
-
-        // ── FIX: Force EHR panel reset via explicit direct reference link ──
-        if (ehrPanelUI != null && scenarioLoader != null)
-        {
-            ScenarioData nextScenario = scenarioLoader.GetActiveScenario();
-            if (nextScenario != null)
-            {
-                ehrPanelUI.PopulateEHRActions(nextScenario);
-                Debug.Log($"EHR Panel cleanly refreshed for incoming scenario: {nextScenario.scenarioTitle} ✅");
-            }
-        }
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 
     void ShowAlert(string message)
     {
         Debug.LogWarning(message);
 
-<<<<<<< HEAD
-=======
-        // On-screen toast fallback notification popups for physical phone validation
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (validationAlertPanel != null && validationAlertText != null)
         {
             validationAlertPanel.SetActive(true);
@@ -553,7 +415,6 @@ public class TriageDecisionManager : MonoBehaviour
         if (rpmController != null)
             rpmController.OnRPMComplete -= OnRPMSequenceComplete;
     }
-<<<<<<< HEAD
 }
 
 public static class PatientAssessmentTracker
@@ -590,6 +451,4 @@ public class PatientAssessmentData
     public TriageCategory selectedCategory;
     public TriageCategory correctCategory;
     public bool isCorrect;
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 }

@@ -1,17 +1,11 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-<<<<<<< HEAD
 using System.Collections;
 using System.Reflection;
 using System;
 
 /// <summary>
 /// Manages multi-patient scenarios (Medium and Hard difficulties).
-=======
-
-/// <summary>
-/// Manages multi-patient scenarios (Medium difficulty).
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 /// Tracks which patient is active and transitions between them.
 /// </summary>
 public class ScenarioManager : MonoBehaviour
@@ -23,14 +17,11 @@ public class ScenarioManager : MonoBehaviour
     public ScenarioData mediumPatientA;
     public ScenarioData mediumPatientB;
 
-<<<<<<< HEAD
     [Header("Hard Scenarios (3 patients)")]
     public ScenarioData hardPatientA;
     public ScenarioData hardPatientB;
     public ScenarioData hardPatientC;
 
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     [Header("Dependencies")]
     public ScenarioLoader scenarioLoader;
     public UIManager uiManager;
@@ -40,10 +31,7 @@ public class ScenarioManager : MonoBehaviour
     private int _currentPatientIndex = 0;
     private DifficultyLevel _activeDifficulty;
     private ScenarioData[] _activeScenarios;
-<<<<<<< HEAD
     private bool _isFirebaseReady = false;
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     public static ScenarioManager Instance;
 
@@ -54,7 +42,6 @@ public class ScenarioManager : MonoBehaviour
 
     void Start()
     {
-<<<<<<< HEAD
         StartCoroutine(WaitForFirebaseAndStart());
     }
 
@@ -83,22 +70,16 @@ public class ScenarioManager : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
         }
         
-=======
-        // Load based on ScenarioSelector
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (ScenarioSelector.SelectedScenario != null)
         {
             if (ScenarioSelector.SelectedDifficulty == DifficultyLevel.Medium)
             {
                 StartMediumScenario();
             }
-<<<<<<< HEAD
             else if (ScenarioSelector.SelectedDifficulty == DifficultyLevel.Hard)
             {
                 StartHardScenario();
             }
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             else
             {
                 StartEasyScenario();
@@ -106,7 +87,6 @@ public class ScenarioManager : MonoBehaviour
         }
         else
         {
-<<<<<<< HEAD
             Debug.Log("ScenarioManager: No selected scenario, using hardcoded fallback");
             if (ScenarioSelector.SelectedDifficulty == DifficultyLevel.Medium)
             {
@@ -120,16 +100,11 @@ public class ScenarioManager : MonoBehaviour
             {
                 StartEasyScenario();
             }
-=======
-            // Default: load easy for testing
-            StartEasyScenario();
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         }
     }
 
     public void StartEasyScenario()
     {
-<<<<<<< HEAD
         if (ScenarioSelector.SelectedScenario != null)
         {
             easyScenario = ScenarioSelector.SelectedScenario;
@@ -140,17 +115,11 @@ public class ScenarioManager : MonoBehaviour
         _activeScenarios = new ScenarioData[] { easyScenario };
         _currentPatientIndex = 0;
         Debug.Log($"Started Easy Scenario: {easyScenario?.scenarioTitle}");
-=======
-        _activeDifficulty = DifficultyLevel.Easy;
-        _activeScenarios = new ScenarioData[] { easyScenario };
-        _currentPatientIndex = 0;
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         LoadCurrentPatient();
     }
 
     public void StartMediumScenario()
     {
-<<<<<<< HEAD
         if (ScenarioSelector.MediumPatients != null && ScenarioSelector.MediumPatients.Length >= 2)
         {
             mediumPatientA = ScenarioSelector.MediumPatients[0];
@@ -253,36 +222,14 @@ public class ScenarioManager : MonoBehaviour
         else
         {
             uiManager.SetScenarioTitle(scenario.scenarioTitle);
-=======
-        _activeDifficulty = DifficultyLevel.Medium;
-        _activeScenarios = new ScenarioData[] { mediumPatientA, mediumPatientB };
-        _currentPatientIndex = 0;
-        LoadCurrentPatient();
-    }
-
-    void LoadCurrentPatient()
-    {
-        ScenarioData scenario = _activeScenarios[_currentPatientIndex];
-
-        // Show patient number for medium
-        if (_activeDifficulty == DifficultyLevel.Medium)
-        {
-            uiManager.SetScenarioTitle(
-                $"Patient {_currentPatientIndex + 1} of 2 — " + scenario.scenarioTitle);
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         }
 
         scenarioLoader.LoadScenario(scenario);
 
-<<<<<<< HEAD
-=======
-        // Start timer
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (timerSystem != null)
             timerSystem.StartTimer(scenario.timeLimitSeconds);
     }
 
-<<<<<<< HEAD
     public string GetPatientLetter(int index)
     {
         switch (index)
@@ -314,24 +261,10 @@ public class ScenarioManager : MonoBehaviour
 
         if (_currentPatientIndex < _activeScenarios.Length)
         {
-=======
-    /// <summary>
-    /// Called after Patient A is done in Medium scenario.
-    /// Loads Patient B.
-    /// </summary>
-    public void LoadNextPatient()
-    {
-        _currentPatientIndex++;
-
-        if (_currentPatientIndex < _activeScenarios.Length)
-        {
-            // Reset the template spawner bridge status so it allows spawning the next patient model
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             ObjectSpawnerBridge bridge = FindFirstObjectByType<ObjectSpawnerBridge>();
             if (bridge != null)
             {
                 bridge.ResetPlacement();
-<<<<<<< HEAD
                 Debug.Log("ObjectSpawnerBridge reset for next patient");
             }
             
@@ -349,32 +282,14 @@ public class ScenarioManager : MonoBehaviour
     {
         LoadCurrentPatient();
     }
-=======
-            }
-
-            // Small delay before next patient
-            Invoke(nameof(LoadCurrentPatient), 1.5f);
-        }
-        else
-        {
-            // All patients done — go to feedback
-            LoadFeedbackScene();
-        }
-    }
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     public bool IsLastPatient() => _currentPatientIndex >= _activeScenarios.Length - 1;
 
     public int GetCurrentPatientIndex() => _currentPatientIndex;
-<<<<<<< HEAD
     
     public DifficultyLevel GetActiveDifficulty() => _activeDifficulty;
     
     public int GetTotalPatientCount() => _activeScenarios != null ? _activeScenarios.Length : 1;
-=======
-
-    public DifficultyLevel GetActiveDifficulty() => _activeDifficulty;
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     void LoadFeedbackScene()
     {

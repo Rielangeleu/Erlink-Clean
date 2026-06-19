@@ -27,10 +27,7 @@ public class DashboardSceneController : MonoBehaviour
     public TextMeshProUGUI confidenceValue;
     public TextMeshProUGUI accuracySub;
     public TextMeshProUGUI speedSub;
-<<<<<<< HEAD
     public TextMeshProUGUI confidenceSub;  // NEW: subtitle for confidence
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     [Header("Recent Activity")]
     public Transform activityList;
@@ -46,17 +43,13 @@ public class DashboardSceneController : MonoBehaviour
     [Header("Logout")]
     public Button logoutButton;
 
-<<<<<<< HEAD
     // Local confidence storage
     private float _currentConfidence = 50f;
 
-=======
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     void Start()
     {
         SetupWelcome();
         SetupNavigation();
-<<<<<<< HEAD
         LoadLocalConfidence();
         StartCoroutine(WaitForFirebaseAndLoad());
     }
@@ -79,11 +72,6 @@ public class DashboardSceneController : MonoBehaviour
         }
     }
 
-=======
-        StartCoroutine(WaitForFirebaseAndLoad());
-    }
-
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     System.Collections.IEnumerator WaitForFirebaseAndLoad()
     {
         // Wait for Firebase to be ready
@@ -155,15 +143,9 @@ public class DashboardSceneController : MonoBehaviour
                 return;
             }
 
-<<<<<<< HEAD
             // Calculate metrics from ALL sessions
             List<int> accuracies = new List<int>();
             List<int> speeds = new List<int>();
-=======
-            // Calculate averages from ALL sessions
-            List<int> accuracies = new List<int>();
-            List<float> speeds = new List<float>();
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             List<int> confidences = new List<int>();
 
             foreach (DocumentSnapshot doc in allSessionsSnap.Documents)
@@ -171,13 +153,8 @@ public class DashboardSceneController : MonoBehaviour
                 if (doc.ContainsField("accuracyScore"))
                     accuracies.Add(doc.GetValue<int>("accuracyScore"));
 
-<<<<<<< HEAD
                 if (doc.ContainsField("speedScore"))
                     speeds.Add(doc.GetValue<int>("speedScore"));
-=======
-                if (doc.ContainsField("timeTaken"))
-                    speeds.Add(doc.GetValue<float>("timeTaken"));
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
                 if (doc.ContainsField("confidenceScore"))
                     confidences.Add(doc.GetValue<int>("confidenceScore"));
@@ -198,7 +175,6 @@ public class DashboardSceneController : MonoBehaviour
             if (speeds.Count > 0 && speedValue != null)
             {
                 float avgSpeed = (float)speeds.Average();
-<<<<<<< HEAD
                 speedValue.text = $"{avgSpeed:F0}%";
                 speedValue.color = GetScoreColor((int)avgSpeed);
 
@@ -217,22 +193,6 @@ public class DashboardSceneController : MonoBehaviour
                 {
                     confidenceSub.text = GetConfidenceDescription(_currentConfidence);
                 }
-=======
-                if (avgSpeed < 60)
-                    speedValue.text = $"{avgSpeed:F0}s";
-                else
-                    speedValue.text = $"{(int)(avgSpeed / 60)}m {(int)(avgSpeed % 60)}s";
-
-                if (speedSub != null)
-                    speedSub.text = $"Avg response time";
-            }
-
-            // Update Confidence
-            if (confidences.Count > 0 && confidenceValue != null)
-            {
-                float avgConf = (float)confidences.Average();
-                confidenceValue.text = GetConfidenceLabel((int)avgConf);
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             }
 
             // Load LAST 5 SESSIONS for Recent Activity
@@ -282,15 +242,8 @@ public class DashboardSceneController : MonoBehaviour
 
         Debug.Log($"Creating {docs.Count} recent activity items");
 
-<<<<<<< HEAD
         if (activityItemPrefab != null)
         {
-=======
-        // Check if prefab is assigned
-        if (activityItemPrefab != null)
-        {
-            Debug.Log("Using prefab to create activity items");
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             foreach (DocumentSnapshot doc in docs)
             {
                 CreateActivityItemWithPrefab(doc);
@@ -298,10 +251,6 @@ public class DashboardSceneController : MonoBehaviour
         }
         else
         {
-<<<<<<< HEAD
-=======
-            Debug.LogWarning("No activityItemPrefab assigned, using dynamic creation");
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
             foreach (DocumentSnapshot doc in docs)
             {
                 CreateActivityItemDynamic(doc);
@@ -313,7 +262,6 @@ public class DashboardSceneController : MonoBehaviour
     {
         if (activityItemPrefab == null || activityList == null) return;
 
-<<<<<<< HEAD
         string scenarioTitle = doc.ContainsField("scenarioTitle")
             ? doc.GetValue<string>("scenarioTitle") : "Simulation";
 
@@ -328,73 +276,36 @@ public class DashboardSceneController : MonoBehaviour
             
         int confidenceScore = doc.ContainsField("confidenceScore")
             ? doc.GetValue<int>("confidenceScore") : 0;
-=======
-        // Get data from document
-        string scenarioTitle = doc.ContainsField("scenarioTitle")
-            ? doc.GetValue<string>("scenarioTitle") : "Simulation";
-
-        int score = doc.ContainsField("finalScore")
-            ? doc.GetValue<int>("finalScore") : 0;
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
         bool isCorrect = doc.ContainsField("isCorrect")
             ? doc.GetValue<bool>("isCorrect") : false;
 
         string dateStr = GetDateString(doc);
 
-<<<<<<< HEAD
         GameObject item = Instantiate(activityItemPrefab, activityList);
-=======
-        Debug.Log($"Creating prefab item: {scenarioTitle} - {score}%");
-
-        // Instantiate the prefab
-        GameObject item = Instantiate(activityItemPrefab, activityList);
-
-        // Try to find TextMeshProUGUI components in the prefab
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         TextMeshProUGUI[] texts = item.GetComponentsInChildren<TextMeshProUGUI>();
 
         if (texts.Length >= 2)
         {
-<<<<<<< HEAD
             texts[0].text = scenarioTitle;
             texts[1].text = $"{finalScore}%";
             texts[1].color = GetScoreColor(finalScore);
-=======
-            // Assuming order: Title, Score, Date, Status
-            texts[0].text = scenarioTitle;
-            texts[1].text = $"{score}%";
-            texts[1].color = GetScoreColor(score);
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
             if (texts.Length >= 3)
                 texts[2].text = dateStr;
             if (texts.Length >= 4)
                 texts[3].text = isCorrect ? "✓ Correct" : "✗ Incorrect";
-<<<<<<< HEAD
             if (texts.Length >= 5)
                 texts[4].text = $"A:{accuracyScore}% S:{speedScore}% C:{confidenceScore}%";
         }
         else
         {
             TryAssignTextsByName(item, scenarioTitle, finalScore, dateStr, isCorrect);
-=======
-        }
-        else
-        {
-            Debug.LogWarning($"Prefab has only {texts.Length} TextMeshPro components, expected at least 2");
-            // Try to find by name instead
-            TryAssignTextsByName(item, scenarioTitle, score, dateStr, isCorrect);
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         }
     }
 
     void TryAssignTextsByName(GameObject item, string title, int score, string dateStr, bool isCorrect)
     {
-<<<<<<< HEAD
-=======
-        // Try to find specific named Text components
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         TextMeshProUGUI titleText = FindTextInChildren(item, "Title");
         TextMeshProUGUI scoreText = FindTextInChildren(item, "Score");
         TextMeshProUGUI dateText = FindTextInChildren(item, "Date");
@@ -424,10 +335,6 @@ public class DashboardSceneController : MonoBehaviour
 
     void CreateActivityItemDynamic(DocumentSnapshot doc)
     {
-<<<<<<< HEAD
-=======
-        // Get data from document
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         string scenarioTitle = doc.ContainsField("scenarioTitle")
             ? doc.GetValue<string>("scenarioTitle") : "Simulation";
 
@@ -439,43 +346,21 @@ public class DashboardSceneController : MonoBehaviour
 
         string dateStr = GetDateString(doc);
 
-<<<<<<< HEAD
         GameObject item = new GameObject("ActivityItem");
         item.transform.SetParent(activityList, false);
 
-=======
-        Debug.Log($"Creating dynamic item: {scenarioTitle} - {score}%");
-
-        // Create main container
-        GameObject item = new GameObject("ActivityItem");
-        item.transform.SetParent(activityList, false);
-
-        // Add Layout Element for proper sizing
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         LayoutElement layoutElement = item.AddComponent<LayoutElement>();
         layoutElement.minHeight = 80;
         layoutElement.flexibleWidth = 1;
 
-<<<<<<< HEAD
         Image bg = item.AddComponent<Image>();
         bg.color = new Color(0.95f, 0.97f, 0.98f);
 
-=======
-        // Add background image
-        Image bg = item.AddComponent<Image>();
-        bg.color = new Color(0.95f, 0.97f, 0.98f); // Light blue-gray
-
-        // Add outline
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         Outline outline = item.AddComponent<Outline>();
         outline.effectColor = new Color(0.8f, 0.8f, 0.9f);
         outline.effectDistance = new Vector2(1, 1);
 
-<<<<<<< HEAD
         // Title
-=======
-        // Create title text
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         GameObject titleGO = new GameObject("Title");
         titleGO.transform.SetParent(item.transform, false);
         TextMeshProUGUI title = titleGO.AddComponent<TextMeshProUGUI>();
@@ -490,11 +375,7 @@ public class DashboardSceneController : MonoBehaviour
         titleRt.offsetMin = new Vector2(16, -15);
         titleRt.offsetMax = new Vector2(-10, 15);
 
-<<<<<<< HEAD
         // Score
-=======
-        // Create score text
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         GameObject scoreGO = new GameObject("Score");
         scoreGO.transform.SetParent(item.transform, false);
         TextMeshProUGUI scoreText = scoreGO.AddComponent<TextMeshProUGUI>();
@@ -510,11 +391,7 @@ public class DashboardSceneController : MonoBehaviour
         scoreRt.offsetMin = new Vector2(0, -15);
         scoreRt.offsetMax = new Vector2(-10, 15);
 
-<<<<<<< HEAD
         // Date
-=======
-        // Create date text
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         GameObject dateGO = new GameObject("Date");
         dateGO.transform.SetParent(item.transform, false);
         TextMeshProUGUI dateText = dateGO.AddComponent<TextMeshProUGUI>();
@@ -529,11 +406,7 @@ public class DashboardSceneController : MonoBehaviour
         dateRt.offsetMin = new Vector2(16, 8);
         dateRt.offsetMax = new Vector2(-10, 28);
 
-<<<<<<< HEAD
         // Status
-=======
-        // Create status text
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         GameObject statusGO = new GameObject("Status");
         statusGO.transform.SetParent(item.transform, false);
         TextMeshProUGUI statusText = statusGO.AddComponent<TextMeshProUGUI>();
@@ -557,24 +430,14 @@ public class DashboardSceneController : MonoBehaviour
             {
                 Timestamp timestamp = doc.GetValue<Timestamp>("completedAt");
                 System.DateTime date = timestamp.ToDateTime();
-<<<<<<< HEAD
                 System.TimeSpan diff = System.DateTime.Now - date;
                 
-=======
-
-                // Show relative time for recent dates
-                System.TimeSpan diff = System.DateTime.Now - date;
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
                 if (diff.TotalHours < 1)
                     return "Just now";
                 if (diff.TotalDays < 1)
                     return $"{diff.Hours}h ago";
                 if (diff.TotalDays < 7)
                     return $"{diff.Days}d ago";
-<<<<<<< HEAD
-=======
-
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
                 return date.ToString("MMM dd, yyyy");
             }
             catch
@@ -589,7 +452,6 @@ public class DashboardSceneController : MonoBehaviour
     {
         if (accuracyValue != null) accuracyValue.text = "--";
         if (speedValue != null) speedValue.text = "--";
-<<<<<<< HEAD
         if (confidenceValue != null) 
         {
             confidenceValue.text = $"{Mathf.RoundToInt(_currentConfidence)}%";
@@ -598,11 +460,6 @@ public class DashboardSceneController : MonoBehaviour
         if (accuracySub != null) accuracySub.text = "No simulations yet";
         if (speedSub != null) speedSub.text = "Complete a simulation";
         if (confidenceSub != null) confidenceSub.text = GetConfidenceDescription(_currentConfidence);
-=======
-        if (confidenceValue != null) confidenceValue.text = "--";
-        if (accuracySub != null) accuracySub.text = "No simulations yet";
-        if (speedSub != null) speedSub.text = "Complete a simulation";
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
         if (noActivityPlaceholder != null)
             noActivityPlaceholder.SetActive(true);
@@ -622,7 +479,6 @@ public class DashboardSceneController : MonoBehaviour
         return new Color(0.863f, 0.149f, 0.149f);
     }
 
-<<<<<<< HEAD
     Color GetConfidenceColor(float confidence)
     {
         if (confidence >= 80) return new Color(0.086f, 0.635f, 0.290f);  // Green - High confidence
@@ -637,19 +493,5 @@ public class DashboardSceneController : MonoBehaviour
         if (confidence >= 60) return "Good confidence - Keep practicing";
         if (confidence >= 40) return "Building confidence - Review protocols";
         return "Low confidence - Needs more practice";
-=======
-    string GetConfidenceLabel(int score)
-    {
-        // Convert 0-100 score to 1-5 scale
-        int level = Mathf.RoundToInt(score / 20f);
-        return level switch
-        {
-            5 => "Very High",
-            4 => "High",
-            3 => "Medium",
-            2 => "Low",
-            _ => "Very Low"
-        };
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
     }
 }

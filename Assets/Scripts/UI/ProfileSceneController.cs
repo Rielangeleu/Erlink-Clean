@@ -81,7 +81,7 @@ public class ProfileSceneController : MonoBehaviour
         if (nameText != null) nameText.text = p.displayName;
         if (emailText != null) emailText.text = p.email;
         if (roleText != null) roleText.text = p.role.ToLower().Contains("student") ? "Student" : p.role;
-        if (institutionText != null) institutionText.text = p.institution;
+        
         if (studentIdText != null) studentIdText.text = p.studentId;
 
         // Pre-fill edit field with current name

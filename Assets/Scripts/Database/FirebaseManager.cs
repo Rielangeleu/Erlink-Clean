@@ -35,7 +35,6 @@ public class FirebaseManager : MonoBehaviour
 
     void Awake()
     {
-<<<<<<< HEAD
         // ✅ CHECK: Only run in Play mode, not in Editor edit mode
         if (!Application.isPlaying)
         {
@@ -43,9 +42,6 @@ public class FirebaseManager : MonoBehaviour
             return;
         }
         
-=======
-        // Singleton — persist across scenes
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -59,7 +55,6 @@ public class FirebaseManager : MonoBehaviour
 
     void InitializeFirebase()
     {
-<<<<<<< HEAD
         // ✅ CHECK: Only initialize if playing
         if (!Application.isPlaying)
         {
@@ -79,42 +74,21 @@ public class FirebaseManager : MonoBehaviour
                 if (task.Result == DependencyStatus.Available)
                 {
                     Debug.Log("Firebase dependencies available, initializing...");
-=======
-        FirebaseApp.CheckAndFixDependenciesAsync()
-            .ContinueWithOnMainThread(task =>
-            {
-                if (task.Result == DependencyStatus.Available)
-                {
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
                     _app = FirebaseApp.DefaultInstance;
                     _auth = FirebaseAuth.DefaultInstance;
                     _db = FirebaseFirestore.DefaultInstance;
 
                     IsInitialized = true;
-<<<<<<< HEAD
                     Debug.Log("✅ Firebase initialized successfully!");
                     OnFirebaseReady?.Invoke();
-=======
-                    Debug.Log("Firebase initialized ✅");
-                    OnFirebaseReady?.Invoke();
-
-                    // Listen for auth state changes
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
                     _auth.StateChanged += OnAuthStateChanged;
                 }
                 else
                 {
-<<<<<<< HEAD
                     Debug.LogError($"❌ Firebase failed: {task.Result}");
                 }
             });
 }
-=======
-                    Debug.LogError($"Firebase failed: {task.Result}");
-                }
-            });
-    }
->>>>>>> 26ca292180f2e5632fdb78b15fe5f649ef097e93
 
     // Add to FirebaseManager.cs — call this in InitializeFirebase() after ready
     async Task CheckMaintenanceMode()
